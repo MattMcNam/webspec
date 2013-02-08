@@ -30,13 +30,24 @@
     <Library Include="d:\hl2sdk-ob-valve\lib\public\vstdlib.lib">
       <Filter>Link Libraries</Filter>
     </Library>
-    <Library Include="lib\websocketpp.lib">
+    <Library Include="lib\websockets.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="lib\ZLIB.lib">
       <Filter>Link Libraries</Filter>
     </Library>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\webspec_plugin.cpp">
+    <ClCompile Include="src\webspec.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\webspec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\webspec-packetCodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
