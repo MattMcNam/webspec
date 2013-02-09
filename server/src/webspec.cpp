@@ -1,5 +1,5 @@
 /*
- *  webspec_plugin.cpp
+ *  webspec.cpp
  *  WebSpec project
  *  
  *  Copyright (c) 2013 Matthew McNamara
@@ -9,19 +9,20 @@
  */
 
 #include "webspec.h"
-#include "webspec-packetCodes.h"
+#include "webspec-definitions.h"
+#include "webspec-helpers.h"
 
 // Global vars
-string_t ws_teamNameBlu = MAKE_STRING("BLU");
-string_t ws_teamNameRed = MAKE_STRING("RED");
+string_t ws_teamName[2];
+bool ws_teamReadyState[2];
+std::vector<struct libwebsocket *> ws_spectators;
+bool ws_shouldListen = false;
 
 //=================================================================================
 // Callback from thread, only managing connections for now
 // May be expanded to handle caster->players chat during pauses,
 //   depending on if the feature is allowed, or even wanted
 //=================================================================================
-
-static bool wsShouldListen = false;
 
 static int webspec_callback_http(struct libwebsocket_context *ctx, struct libwebsocket *wsi, 
 	enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len)
@@ -33,8 +34,10 @@ static int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocke
 	enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len)
 {
 	switch (reason) {
-		case LWS_CALLBACK_ESTABLISHED: { // New connection
-			Msg("[WebSpec] New connection\n");
+		case LWS_CALLBACK_ESTABLISHED:
+		{
+			// New connection
+			ws_spectators.push_back(wsi);
 			
 			// Send basic game info to let client set up
 			// MapName, Server name (may remove), current team names (TF2 5-letter, not full)
@@ -47,7 +50,7 @@ static int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocke
 			else
 				hostname = "WebSpec Demo Server"; //Can't imagine when hostname would be invalid, but this is Source
 
-			int length = sprintf(buffer, "%s%s:%s:%s:%s", WSPACKET_INIT, mapName, hostname, STRING(ws_teamNameRed), STRING(ws_teamNameBlu));
+			int length = sprintf(buffer, "%c%s:%s:%s:%s", WSPACKET_Init, mapName, hostname, STRING(ws_teamName[1]), STRING(ws_teamName[0]));
 
 			unsigned char *packetBuffer = (unsigned char*)malloc(length + LWS_SEND_BUFFER_PRE_PADDING + LWS_SEND_BUFFER_POST_PADDING);
 			//Put sent message into response
@@ -62,7 +65,8 @@ static int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocke
 
 			break;
 		}
-		case LWS_CALLBACK_RECEIVE: {
+		case LWS_CALLBACK_RECEIVE:
+		{
 			//Echo back whatever is received with a . preceding
 			//Useful to quickly test if WebSockets is working correctly
 
@@ -79,15 +83,18 @@ static int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocke
 				buffer[LWS_SEND_BUFFER_PRE_PADDING + 1 + i] = ((char *) in)[i];
 			}
 
-			//Print to console for debugging
-			Msg("[WebSpec] Sending message: %.*s\n", len+1, buffer + LWS_SEND_BUFFER_PRE_PADDING);
-
 			//Actually send
 			libwebsocket_write(wsi, &buffer[LWS_SEND_BUFFER_PRE_PADDING], len+1, LWS_WRITE_TEXT);
 
 			//Free memory
 			free(buffer);
 			break;
+		}
+		case LWS_CALLBACK_CLOSED:
+		{
+			std::vector<struct libwebsocket *>::iterator it;
+			it = std::find(ws_spectators.begin(), ws_spectators.end(), wsi);
+			ws_spectators.erase(it);
 		}
 		default:
 			break;
@@ -124,7 +131,7 @@ struct WSServerThreadParams_t {
 static unsigned WSServerThread(void *params) {
 	WSServerThreadParams_t *vars = (WSServerThreadParams_t *)params;
 	
-	while (wsShouldListen) {
+	while (ws_shouldListen) {
 		libwebsocket_service(vars->ctx, 50); //check for events every 50ms
 	}
 
@@ -168,12 +175,23 @@ bool WebSpecPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfaceFn 
 	if(	!gameEventManager )
 	{
 		Warning( "[WebSpec] Unable to load GameEventManager!\n" );
+		return false;
 	}
 
-	if ( playerInfoManager )
-	{
-		gpGlobals = playerInfoManager->GetGlobalVars();
+	engine = (IVEngineServer *)interfaceFactory(INTERFACEVERSION_VENGINESERVER, NULL);
+	if (!engine) {
+		Warning("[WebSpec] Unable to load VEngineServer!\n");
+		return false;
 	}
+
+	gameEventManager->AddListener(this, true);
+
+	//Init global variables
+	gpGlobals = playerInfoManager->GetGlobalVars();
+	ws_teamName[0] = MAKE_STRING("BLU");
+	ws_teamName[1] = MAKE_STRING("RED");
+	ws_teamReadyState[0] = false;
+	ws_teamReadyState[1] = false;
 
 	//Init WebSocket server
 	const char *wsInterface = NULL;
@@ -185,10 +203,10 @@ bool WebSpecPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfaceFn 
 		libwebsocket_internal_extensions, cert_path, key_path, NULL, -1, -1, options, NULL);
 
 	if (wsContext == NULL)
-		Msg("[WebSpec] failed to init libwebsockets");
+		Msg("[WebSpec] failed to init libwebsockets\n");
 
 	//Start WebSpec server
-	wsShouldListen = true;
+	ws_shouldListen = true;
 	WSServerThreadParams_t *params = new WSServerThreadParams_t;
 	params->ctx = wsContext;
 	CreateSimpleThread( WSServerThread, params );
@@ -205,16 +223,14 @@ void WebSpecPlugin::Unload( void )
 {
 	gameEventManager->RemoveListener( this ); // make sure we are unloaded from the event system
 
-	wsShouldListen = false;
+	ws_shouldListen = false;
 	Sleep(60);
 	libwebsocket_context_destroy(wsContext);
 	//Context will be cleaned up in thread, thread should then end
 
 	ConVar_Unregister( );
 	DisconnectTier2Libraries( );
-	//Msg("here4\n");
 	DisconnectTier1Libraries( );
-	//Msg("here5\n");
 }
 
 //---------------------------------------------------------------------------------
@@ -342,6 +358,71 @@ void WebSpecPlugin::OnQueryCvarValueFinished( QueryCvarCookie_t iCookie, edict_t
 //---------------------------------------------------------------------------------
 void WebSpecPlugin::FireGameEvent( KeyValues * event )
 {
-	//const char * name = event->GetName();
-	//Msg( "WebSpecPlugin::FireGameEvent: Got event \"%s\"\n", name );
+	const char *name = event->GetName();
+	int eventInt = GetEventIntForName(name);
+
+	switch (eventInt) {
+	case Event_TournamentState:
+	{
+		EventHandler_TeamInfo(event);
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+//=================================================================================
+// Various Event Handlers
+//=================================================================================
+
+void WebSpecPlugin::EventHandler_TeamInfo(KeyValues *event) {
+	int userID = event->GetInt("userid");
+	int clientIndex = WS_GetClientOfUserID(userID);
+	int teamID = playerInfoManager->GetPlayerInfo(engine->PEntityOfEntIndex(clientIndex))->GetTeamIndex();
+	bool nameChanged = (event->GetInt("namechange") > 0);
+	
+	string_t teamName;
+	int readyState;
+	char *buffer = (char*)malloc(30);
+	
+	if (teamID == TFTeam_Red) {
+		if (nameChanged)
+			ws_teamName[1] = MAKE_STRING(event->GetString("newname"));
+		else
+			ws_teamReadyState[1] = (event->GetInt("readystate") > 0);
+
+		teamName = ws_teamName[1];
+		readyState = ws_teamReadyState[1];
+	} else {
+		if (nameChanged)
+			ws_teamName[0] = MAKE_STRING(event->GetString("newname"));
+		else
+			ws_teamReadyState[0] = (event->GetInt("readystate") > 0);
+
+		teamName = ws_teamName[0];
+		readyState = ws_teamReadyState[0];
+	}
+
+	int length = sprintf(buffer, "%c%i:%s:%i", WSPACKET_TeamInfo, teamID, teamName, readyState);
+	SendPacketToAll(buffer, length);
+
+	free(buffer);
+}
+
+void WebSpecPlugin::SendPacketToAll(char *buffer, int length) {
+	unsigned char *packetBuffer = (unsigned char*)malloc(length + LWS_SEND_BUFFER_PRE_PADDING + LWS_SEND_BUFFER_POST_PADDING);
+
+	//Put sent message into response
+	for (int i=0; i < length; i++) {
+		packetBuffer[LWS_SEND_BUFFER_PRE_PADDING + i] = buffer[i];
+	}
+	
+	//Send to all clients
+	struct libwebsocket *wsi;
+	for (unsigned int i=0; i<ws_spectators.size(); i++) {
+		wsi = ws_spectators.at(i);
+		libwebsocket_write(wsi, &packetBuffer[LWS_SEND_BUFFER_PRE_PADDING], length, LWS_WRITE_TEXT);
+	}
+	free(packetBuffer);
 }

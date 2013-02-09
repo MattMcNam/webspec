@@ -14,12 +14,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <algorithm>
+#include <vector>
 #include <libwebsockets.h>
 
 #include "interface.h"
 #include "engine/iserverplugin.h"
 #include "game/server/iplayerinfo.h"
 #include "igameevents.h"
+#include "eiface.h"
 #include "convar.h"
 #include "tier2/tier2.h"
 
@@ -27,6 +30,7 @@
 #include "tier0/memdbgon.h"
 
 // Interfaces from the engine
+IVEngineServer	*engine = NULL; // helper functions (messaging clients, loading content, making entities, running commands, etc)
 IGameEventManager *gameEventManager = NULL; // game events interface
 IPlayerInfoManager *playerInfoManager = NULL; // game dll interface to interact with players
 
@@ -63,6 +67,12 @@ public:
 
 	// IGameEventListener Interface
 	virtual void FireGameEvent( KeyValues * event );
+
+	// Event Handlers
+	void EventHandler_TeamInfo(KeyValues *event);
+
+	//Websockets
+	void SendPacketToAll(char *buffer, int length);
 private:
 	struct libwebsocket_context *wsContext;
 	int wsPort;

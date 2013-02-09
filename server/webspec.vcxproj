@@ -224,7 +224,8 @@
     <Library Include="lib\ZLIB.lib" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\webspec-packetCodes.h" />
+    <ClInclude Include="src\webspec-definitions.h" />
+    <ClInclude Include="src\webspec-helpers.h" />
     <ClInclude Include="src\webspec.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

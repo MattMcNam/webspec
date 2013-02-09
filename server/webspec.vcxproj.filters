@@ -46,7 +46,10 @@
     <ClInclude Include="src\webspec.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\webspec-packetCodes.h">
+    <ClInclude Include="src\webspec-definitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\webspec-helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
