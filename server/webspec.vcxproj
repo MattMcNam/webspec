@@ -70,11 +70,11 @@
     </CustomBuildStep>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(BOOSTROOT);$(HL2SDK)\common;$(WEBSOCKETPPROOT)\src;$(HL2SDK)\public;$(HL2SDK)\public\tier0;$(HL2SDK)\public\tier1;$(HL2SDK)\game\server;$(HL2SDK)\game\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(HL2SDK)\common;C:\Users\Matthew\Dev\libwebsockets\lib;$(HL2SDK)\public;$(HL2SDK)\public\tier0;$(HL2SDK)\public\tier1;$(HL2SDK)\game\server;$(HL2SDK)\game\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>true</MinimalRebuild>
-      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExceptionHandling>false</ExceptionHandling>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -100,7 +100,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)webspec.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -225,6 +225,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\webspec-definitions.h" />
+    <ClInclude Include="src\webspec-dumping.h" />
     <ClInclude Include="src\webspec-helpers.h" />
     <ClInclude Include="src\webspec.h" />
   </ItemGroup>

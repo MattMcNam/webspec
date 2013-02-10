@@ -11,12 +11,17 @@
 #include "webspec.h"
 #include "webspec-definitions.h"
 #include "webspec-helpers.h"
+#include "webspec-dumping.h"
 
 // Global vars
 string_t ws_teamName[2];
 bool ws_teamReadyState[2];
 std::vector<struct libwebsocket *> ws_spectators;
 bool ws_shouldListen = false;
+
+//Offsets
+int ws_offset_CTFPlayer_iClass;
+int ws_offset_CBaseObject_iMaxHealth;
 
 //=================================================================================
 // Callback from thread, only managing connections for now
@@ -49,19 +54,34 @@ static int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocke
 				hostname = (char *)hostNameCVar.GetString();
 			else
 				hostname = "WebSpec Demo Server"; //Can't imagine when hostname would be invalid, but this is Source
-
 			int length = sprintf(buffer, "%c%s:%s:%s:%s", WSPACKET_Init, mapName, hostname, STRING(ws_teamName[1]), STRING(ws_teamName[0]));
 
-			unsigned char *packetBuffer = (unsigned char*)malloc(length + LWS_SEND_BUFFER_PRE_PADDING + LWS_SEND_BUFFER_POST_PADDING);
-			//Put sent message into response
-			for (int i=0; i < length; i++) {
-				packetBuffer[LWS_SEND_BUFFER_PRE_PADDING + i] = buffer[i];
-			}
-
-			libwebsocket_write(wsi, &packetBuffer[LWS_SEND_BUFFER_PRE_PADDING], length, LWS_WRITE_TEXT);
-
-			free(packetBuffer);
+			SendPacketToOne(buffer, length, wsi);
 			free(buffer);
+
+			//Send connected players
+			IPlayerInfo *playerInfo;
+			for (int i=1; i<=gpGlobals->maxClients; i++) {
+				playerInfo = playerInfoManager->GetPlayerInfo(engine->PEntityOfEntIndex(i));
+				if (playerInfo != NULL && playerInfo->IsConnected()) {
+					buffer = (char *)malloc(256);
+					int userid = playerInfo->GetUserID();
+					int teamid = playerInfo->GetTeamIndex();
+					int health = playerInfo->GetHealth();
+					int maxHealth = playerInfo->GetMaxHealth();
+					bool alive = !playerInfo->IsDead();
+					string_t playerName = MAKE_STRING(playerInfo->GetName());
+						
+					CBaseEntity *playerEntity = serverGameEnts->EdictToBaseEntity(engine->PEntityOfEntIndex(i));
+					int playerClass =  *MakePtr(int*, playerEntity, ws_offset_CTFPlayer_iClass);
+
+					int length = sprintf(buffer, "%c%d:%d:%d:%d:%d:%d:0:0:%s", 'C', userid, teamid, playerClass,
+						health, maxHealth, alive, STRING(playerName));
+
+					SendPacketToOne(buffer, length, wsi);
+					free(buffer);
+				}
+			}
 
 			break;
 		}
@@ -184,6 +204,17 @@ bool WebSpecPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfaceFn 
 		return false;
 	}
 
+	serverGameEnts = (IServerGameEnts *)gameServerFactory(INTERFACEVERSION_SERVERGAMEENTS, NULL);
+	if (!serverGameEnts) {
+		Warning("[WebSpec] Unable to load ServerGameEnts!\n");
+		return false;
+	}
+
+	serverGameDLL = (IServerGameDLL *)gameServerFactory("ServerGameDLL008", NULL); // ServerGameDLL008 for TF2, not in hl2sdk-ob-valve
+	if (!serverGameDLL) {
+		return false;
+	}
+
 	gameEventManager->AddListener(this, true);
 
 	//Init global variables
@@ -192,6 +223,10 @@ bool WebSpecPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfaceFn 
 	ws_teamName[1] = MAKE_STRING("RED");
 	ws_teamReadyState[0] = false;
 	ws_teamReadyState[1] = false;
+
+	//Get offsets
+	ws_offset_CTFPlayer_iClass = WS_FindOffset("CTFPlayer", "m_iClass");
+	ws_offset_CBaseObject_iMaxHealth = WS_FindOffset("CBaseObject", "m_iMaxHealth");
 
 	//Init WebSocket server
 	const char *wsInterface = NULL;
@@ -410,7 +445,7 @@ void WebSpecPlugin::EventHandler_TeamInfo(KeyValues *event) {
 	free(buffer);
 }
 
-void WebSpecPlugin::SendPacketToAll(char *buffer, int length) {
+static void SendPacketToAll(char *buffer, int length) {
 	unsigned char *packetBuffer = (unsigned char*)malloc(length + LWS_SEND_BUFFER_PRE_PADDING + LWS_SEND_BUFFER_POST_PADDING);
 
 	//Put sent message into response
@@ -424,5 +459,18 @@ void WebSpecPlugin::SendPacketToAll(char *buffer, int length) {
 		wsi = ws_spectators.at(i);
 		libwebsocket_write(wsi, &packetBuffer[LWS_SEND_BUFFER_PRE_PADDING], length, LWS_WRITE_TEXT);
 	}
+	free(packetBuffer);
+}
+
+static void SendPacketToOne(char *buffer, int length, struct libwebsocket *wsi) {
+	unsigned char *packetBuffer = (unsigned char *)malloc(length + LWS_SEND_BUFFER_PRE_PADDING + LWS_SEND_BUFFER_POST_PADDING);
+
+	//Put sent message into response
+	for (int i=0; i < length; i++) {
+		packetBuffer[LWS_SEND_BUFFER_PRE_PADDING + i] = buffer[i];
+	}
+	
+	//Send to given client
+	libwebsocket_write(wsi, &packetBuffer[LWS_SEND_BUFFER_PRE_PADDING], length, LWS_WRITE_TEXT);
 	free(packetBuffer);
 }

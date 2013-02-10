@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string>
 #include <algorithm>
 #include <vector>
@@ -33,6 +34,8 @@
 IVEngineServer	*engine = NULL; // helper functions (messaging clients, loading content, making entities, running commands, etc)
 IGameEventManager *gameEventManager = NULL; // game events interface
 IPlayerInfoManager *playerInfoManager = NULL; // game dll interface to interact with players
+IServerGameEnts *serverGameEnts = NULL; // Maybe get player entities for class etc. ??
+IServerGameDLL *serverGameDLL = NULL; // Offsets
 
 CGlobalVars *gpGlobals = NULL;
 
@@ -70,12 +73,12 @@ public:
 
 	// Event Handlers
 	void EventHandler_TeamInfo(KeyValues *event);
-
-	//Websockets
-	void SendPacketToAll(char *buffer, int length);
 private:
 	struct libwebsocket_context *wsContext;
 	int wsPort;
 };
+
+static void SendPacketToAll(char *buffer, int length);
+static void SendPacketToOne(char *buffer, int length, struct libwebsocket *wsi);
 
 #endif
