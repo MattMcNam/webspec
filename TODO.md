@@ -3,7 +3,7 @@ TF2 WebSpec To-do list
 
 GitHub contributors can edit this list as they wish; otherwise you can either:
 
-1. Create a new 'issue' via GitHub and tag it as `enhancement` or `todo` (**preferred**)
+1. Create a new 'issue' via GitHub and tag it as `enhancement` or `todo` **preferred**
 2. Modify this file in your own fork and submit a pull request, *along with relevant/useful code changes*
 
 --
