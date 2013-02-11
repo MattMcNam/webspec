@@ -55,5 +55,8 @@
     <ClInclude Include="src\webspec-dumping.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\webspec-vfuncs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

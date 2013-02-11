@@ -21,6 +21,21 @@ enum TFTeam {
 	TFTeam_Blue = 3
 };
 
+enum TFClass {
+	TFClass_Unknown = 0,
+	TFClass_Scout,
+	TFClass_Sniper,
+	TFClass_Soldier,
+	TFClass_DemoMan,
+	TFClass_Medic,
+	TFClass_Heavy,
+	TFClass_Pyro,
+	TFClass_Spy,
+	TFClass_Engineer
+};
+
+#define WSCompileRoundFloat(x) ((x)>=0?(int)((x)+0.5):(int)((x)-0.5))
+
 static int WS_GetClientOfUserID(int userid) {
 	if (userid < 0 || userid > USHRT_MAX)
 		return 0;
@@ -105,6 +120,8 @@ static int WS_FindOffset(const char *className, const char *propName) {
 			if (sTable) {
 				int offset = 0;
 				bool found = CrawlForPropOffset(sTable, propName, offset);
+				if (!found)
+					offset = 0;
 				return offset;
 			}
 		}

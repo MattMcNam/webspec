@@ -12,6 +12,7 @@
 #include "webspec-definitions.h"
 #include "webspec-helpers.h"
 #include "webspec-dumping.h"
+#include "webspec-vfuncs.h"
 
 // Global vars
 string_t ws_teamName[2];
@@ -21,7 +22,7 @@ bool ws_shouldListen = false;
 
 //Offsets
 int ws_offset_CTFPlayer_iClass;
-int ws_offset_CBaseObject_iMaxHealth;
+int ws_offset_CWeaponMedigun_flChargeLevel;
 
 //=================================================================================
 // Callback from thread, only managing connections for now
@@ -71,12 +72,22 @@ static int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocke
 					int maxHealth = playerInfo->GetMaxHealth();
 					bool alive = !playerInfo->IsDead();
 					string_t playerName = MAKE_STRING(playerInfo->GetName());
-						
+					
 					CBaseEntity *playerEntity = serverGameEnts->EdictToBaseEntity(engine->PEntityOfEntIndex(i));
-					int playerClass =  *MakePtr(int*, playerEntity, ws_offset_CTFPlayer_iClass);
+					int playerClass = *MakePtr(int*, playerEntity, ws_offset_CTFPlayer_iClass);
 
-					int length = sprintf(buffer, "%c%d:%d:%d:%d:%d:%d:0:0:%s", 'C', userid, teamid, playerClass,
-						health, maxHealth, alive, STRING(playerName));
+					float uberCharge = 0.0f;
+					
+					if (playerClass == TFClass_Medic) { 
+						CBaseCombatCharacter *playerCombatCharacter = CBaseEntity_MyCombatCharacterPointer(playerEntity);
+						
+						CBaseCombatWeapon *slot1Weapon = CBaseCombatCharacter_Weapon_GetSlot(playerCombatCharacter, 1);
+						
+						uberCharge = *MakePtr(float*, slot1Weapon, ws_offset_CWeaponMedigun_flChargeLevel);
+					}
+
+					int length = sprintf(buffer, "%c%d:%d:%d:%d:%d:%d:0:%d:%s", 'C', userid, teamid, playerClass,
+						health, maxHealth, alive, WSCompileRoundFloat(uberCharge*100.0f), STRING(playerName));
 
 					SendPacketToOne(buffer, length, wsi);
 					free(buffer);
@@ -226,7 +237,7 @@ bool WebSpecPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfaceFn 
 
 	//Get offsets
 	ws_offset_CTFPlayer_iClass = WS_FindOffset("CTFPlayer", "m_iClass");
-	ws_offset_CBaseObject_iMaxHealth = WS_FindOffset("CBaseObject", "m_iMaxHealth");
+	ws_offset_CWeaponMedigun_flChargeLevel = WS_FindOffset("CWeaponMedigun", "m_flChargeLevel");
 
 	//Init WebSocket server
 	const char *wsInterface = NULL;
