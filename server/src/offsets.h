@@ -3,8 +3,8 @@
  *  WebSpec project
  *  
  *  Copyright (c) 2013 Matthew McNamara
- *  BSD License
- *  http://opensource.org/licenses/BSD-3-Clause
+ *  BSD 2-Clause License
+ *  http://opensource.org/licenses/BSD-2-Clause
  *
  */
 
