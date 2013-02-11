@@ -13,16 +13,13 @@
 #include "webspec-helpers.h"
 #include "webspec-dumping.h"
 #include "webspec-vfuncs.h"
+#include "offsets.h"
 
 // Global vars
 string_t ws_teamName[2];
 bool ws_teamReadyState[2];
 std::vector<struct libwebsocket *> ws_spectators;
 bool ws_shouldListen = false;
-
-//Offsets
-int ws_offset_CTFPlayer_iClass;
-int ws_offset_CWeaponMedigun_flChargeLevel;
 
 //=================================================================================
 // Callback from thread, only managing connections for now
@@ -74,7 +71,7 @@ static int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocke
 					string_t playerName = MAKE_STRING(playerInfo->GetName());
 					
 					CBaseEntity *playerEntity = serverGameEnts->EdictToBaseEntity(engine->PEntityOfEntIndex(i));
-					int playerClass = *MakePtr(int*, playerEntity, ws_offset_CTFPlayer_iClass);
+					int playerClass = *MakePtr(int*, playerEntity, WSOffsets::pCTFPlayer__m_iClass);
 
 					float uberCharge = 0.0f;
 					
@@ -83,7 +80,7 @@ static int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocke
 						
 						CBaseCombatWeapon *slot1Weapon = CBaseCombatCharacter_Weapon_GetSlot(playerCombatCharacter, 1);
 						
-						uberCharge = *MakePtr(float*, slot1Weapon, ws_offset_CWeaponMedigun_flChargeLevel);
+						uberCharge = *MakePtr(float*, slot1Weapon, WSOffsets::pCWeaponMedigun__m_flChargeLevel);
 					}
 
 					int length = sprintf(buffer, "%c%d:%d:%d:%d:%d:%d:0:%d:%s", 'C', userid, teamid, playerClass,
@@ -234,10 +231,8 @@ bool WebSpecPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfaceFn 
 	ws_teamName[1] = MAKE_STRING("RED");
 	ws_teamReadyState[0] = false;
 	ws_teamReadyState[1] = false;
-
-	//Get offsets
-	ws_offset_CTFPlayer_iClass = WS_FindOffset("CTFPlayer", "m_iClass");
-	ws_offset_CWeaponMedigun_flChargeLevel = WS_FindOffset("CWeaponMedigun", "m_flChargeLevel");
+	
+	WSOffsets::PrepareOffsets();
 
 	//Init WebSocket server
 	const char *wsInterface = NULL;

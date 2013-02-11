@@ -212,6 +212,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\offsets.cpp" />
     <ClCompile Include="src\webspec.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -224,6 +225,7 @@
     <Library Include="lib\ZLIB.lib" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\offsets.h" />
     <ClInclude Include="src\webspec-definitions.h" />
     <ClInclude Include="src\webspec-dumping.h" />
     <ClInclude Include="src\webspec-helpers.h" />

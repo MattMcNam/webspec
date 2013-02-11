@@ -31,7 +31,7 @@
 #include "tier0/memdbgon.h"
 
 // Interfaces from the engine
-IVEngineServer	*engine = NULL; // helper functions (messaging clients, loading content, making entities, running commands, etc)
+IVEngineServer *engine = NULL; // helper functions (messaging clients, loading content, making entities, running commands, etc)
 IGameEventManager *gameEventManager = NULL; // game events interface
 IPlayerInfoManager *playerInfoManager = NULL; // game dll interface to interact with players
 IServerGameEnts *serverGameEnts = NULL; // Maybe get player entities for class etc. ??
@@ -39,9 +39,9 @@ IServerGameDLL *serverGameDLL = NULL; // Offsets
 
 CGlobalVars *gpGlobals = NULL;
 
-//---------------------------------------------------------------------------------
-// Purpose: a sample 3rd party plugin class
-//---------------------------------------------------------------------------------
+//=================================================================================
+// Main plugin class
+//=================================================================================
 class WebSpecPlugin: public IServerPluginCallbacks, public IGameEventListener
 {
 public:
