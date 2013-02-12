@@ -12,6 +12,8 @@
 #include "webspec.h"
 #include "server_class.h"
 
+#ifdef DEBUG
+
 //=================================================================================
 // Functions to dump all properties & offsets from all classes in the server DLL
 // Will spam the console with them, so use -condebug launch option to have it
@@ -73,5 +75,7 @@ static void DumpClasses() {
 		pClass = pClass->m_pNext;
 	}
 }
+
+#endif //DEBUG
 
 #endif

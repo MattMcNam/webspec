@@ -44,6 +44,6 @@ private:
 	static bool CrawlForPropOffset(SendTable *sTable, const char *propName, int &offset);
 };
 
-#define MakePtr( cast, ptr, addValue ) (cast)( (DWORD_PTR)(ptr) + (DWORD_PTR)(addValue))
+#define MakePtr( cast, ptr, addValue ) (cast)( (unsigned long)(ptr) + (unsigned long)(addValue))
 
 #endif

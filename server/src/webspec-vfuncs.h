@@ -29,10 +29,16 @@ class CBaseCombatCharacter;
 //  -Linux indexes, Windows is _usually_ 1 less
 //=================================================================================
 
-#define VFUNCINDEX_CBaseCombatCharacter_Weapon_GetSlot 266 //267 linux
+#ifdef _LINUX
+#define VFUNCINDEX_CBaseCombatCharacter_Weapon_GetSlot 267
+#define VFUNCINDEX_CBaseEntity_MyCombatCharacterPointer 72
+#else
+#define VFUNCINDEX_CBaseCombatCharacter_Weapon_GetSlot 266
+#define VFUNCINDEX_CBaseEntity_MyCombatCharacterPointer 71
+#endif
+
 extern CBaseCombatWeapon *CBaseCombatCharacter_Weapon_GetSlot(CBaseCombatCharacter *pThisPtr, int slot);
 
-#define VFUNCINDEX_CBaseEntity_MyCombatCharacterPointer 71 //72 linux
 extern CBaseCombatCharacter *CBaseEntity_MyCombatCharacterPointer(CBaseEntity *pThisPtr);
 
 

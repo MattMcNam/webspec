@@ -11,8 +11,6 @@
 #ifndef WEBSPEC_HELPERS_H
 #define WEBSPEC_HELPERS_H
 
-#include "webspec.h"
-
 enum TFTeam {
 	TFTeam_Unassigned = 0,
 	TFTeam_Spectator = 1,

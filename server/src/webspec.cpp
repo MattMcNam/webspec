@@ -15,6 +15,10 @@
 #include "webspec-vfuncs.h"
 #include "offsets.h"
 
+#ifdef _LINUX
+#include <unistd.h>
+#endif
+
 // Global vars
 string_t ws_teamName[2];
 bool ws_teamReadyState[2];
@@ -47,12 +51,12 @@ static int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocke
 			char *buffer = (char*)malloc(256);
 			char *mapName = (char*) STRING(gpGlobals->mapname);
 			ConVarRef hostNameCVar = ConVarRef("hostname");
-			char *hostname;
+			string_t hostname;
 			if (hostNameCVar.IsValid())
-				hostname = (char *)hostNameCVar.GetString();
+				hostname = MAKE_STRING(hostNameCVar.GetString());
 			else
-				hostname = "WebSpec Demo Server"; //Can't imagine when hostname would be invalid, but this is Source
-			int length = sprintf(buffer, "%c%s:%s:%s:%s", WSPACKET_Init, mapName, hostname, STRING(ws_teamName[1]), STRING(ws_teamName[0]));
+				hostname = MAKE_STRING("WebSpec Demo Server"); //Can't imagine when hostname would be invalid, but this is Source
+			int length = sprintf(buffer, "%c%s:%s:%s:%s", WSPACKET_Init, mapName, STRING(hostname), STRING(ws_teamName[1]), STRING(ws_teamName[0]));
 
 			SendPacketToOne(buffer, length, wsi);
 			free(buffer);
@@ -265,7 +269,11 @@ void WebSpecPlugin::Unload( void )
 	gameEventManager->RemoveListener( this ); // make sure we are unloaded from the event system
 
 	ws_shouldListen = false;
+#ifdef _LINUX
+	usleep(60*1000);
+#else
 	Sleep(60);
+#endif
 	libwebsocket_context_destroy(wsContext);
 	//Context will be cleaned up in thread, thread should then end
 
@@ -445,7 +453,7 @@ void WebSpecPlugin::EventHandler_TeamInfo(KeyValues *event) {
 		readyState = ws_teamReadyState[0];
 	}
 
-	int length = sprintf(buffer, "%c%i:%s:%i", WSPACKET_TeamInfo, teamID, teamName, readyState);
+	int length = sprintf(buffer, "%c%i:%s:%i", WSPACKET_TeamInfo, teamID, STRING(teamName), readyState);
 	SendPacketToAll(buffer, length);
 
 	free(buffer);
