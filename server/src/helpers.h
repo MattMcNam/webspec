@@ -1,5 +1,5 @@
 /*
- *  webspec-helpers.h
+ *  helpers.h
  *  WebSpec project
  *  
  *  Copyright (c) 2013 Matthew McNamara
@@ -8,8 +8,15 @@
  *
  */
 
-#ifndef WEBSPEC_HELPERS_H
-#define WEBSPEC_HELPERS_H
+#ifndef HELPERS_H
+#define HELPERS_H
+
+#include "eiface.h"
+#include "game/server/iplayerinfo.h"
+
+extern IVEngineServer *engine;
+extern IPlayerInfoManager *playerInfoManager;
+extern CGlobalVars *gpGlobals;
 
 enum TFTeam {
 	TFTeam_Unassigned = 0,
@@ -18,6 +25,8 @@ enum TFTeam {
 	TFTeam_Blue = 3
 };
 
+// Ordered by TF2's internal indexes, 
+// not class selection screen ingame
 enum TFClass {
 	TFClass_Unknown = 0,
 	TFClass_Scout,
@@ -33,21 +42,6 @@ enum TFClass {
 
 #define WSCompileRoundFloat(x) ((x)>=0?(int)((x)+0.5):(int)((x)-0.5))
 
-static int WS_GetClientOfUserID(int userid) {
-	if (userid < 0 || userid > USHRT_MAX)
-		return 0;
-
-	IPlayerInfo *playerInfo;
-	for (int i = 1; i <= gpGlobals->maxClients; i++) {
-		playerInfo = playerInfoManager->GetPlayerInfo(engine->PEntityOfEntIndex(i));
-		if (!playerInfo || !playerInfo->IsConnected())
-			continue;
-
-		if (playerInfo->GetUserID() == userid)
-			return i;
-	}
-
-	return 0;
-}
+extern int GetClientIndexForUserID(int userid);
 
 #endif

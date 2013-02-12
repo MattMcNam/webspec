@@ -19,6 +19,16 @@
 #include <vector>
 #include <libwebsockets.h>
 
+#ifdef _LINUX
+#include <unistd.h>
+#endif
+
+#include "callbacks.h"
+#include "definitions.h"
+#include "helpers.h"
+#include "offsets.h"
+#include "vfuncs.h"
+
 #include "interface.h"
 #include "engine/iserverplugin.h"
 #include "game/server/iplayerinfo.h"
@@ -38,6 +48,11 @@ IServerGameEnts *serverGameEnts = NULL; // Maybe get player entities for class e
 IServerGameDLL *serverGameDLL = NULL; // Offsets
 
 CGlobalVars *gpGlobals = NULL;
+
+std::vector<struct libwebsocket *> ws_spectators;
+string_t ws_teamName[2];
+bool ws_teamReadyState[2];
+bool ws_shouldListen = false;
 
 //=================================================================================
 // Main plugin class
@@ -78,7 +93,7 @@ private:
 	int wsPort;
 };
 
-static void SendPacketToAll(char *buffer, int length);
-static void SendPacketToOne(char *buffer, int length, struct libwebsocket *wsi);
+void SendPacketToAll(char *buffer, int length);
+void SendPacketToOne(char *buffer, int length, struct libwebsocket *wsi);
 
 #endif

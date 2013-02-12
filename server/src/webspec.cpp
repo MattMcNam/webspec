@@ -9,148 +9,6 @@
  */
 
 #include "webspec.h"
-#include "webspec-definitions.h"
-#include "webspec-helpers.h"
-#include "webspec-dumping.h"
-#include "webspec-vfuncs.h"
-#include "offsets.h"
-
-#ifdef _LINUX
-#include <unistd.h>
-#endif
-
-// Global vars
-string_t ws_teamName[2];
-bool ws_teamReadyState[2];
-std::vector<struct libwebsocket *> ws_spectators;
-bool ws_shouldListen = false;
-
-//=================================================================================
-// Callback from thread, only managing connections for now
-// May be expanded to handle caster->players chat during pauses,
-//   depending on if the feature is allowed, or even wanted
-//=================================================================================
-
-static int webspec_callback_http(struct libwebsocket_context *ctx, struct libwebsocket *wsi, 
-	enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len)
-{
-	return 0;
-}
-
-static int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocket *wsi, 
-	enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len)
-{
-	switch (reason) {
-		case LWS_CALLBACK_ESTABLISHED:
-		{
-			// New connection
-			ws_spectators.push_back(wsi);
-			
-			// Send basic game info to let client set up
-			// MapName, Server name (may remove), current team names (TF2 5-letter, not full)
-			char *buffer = (char*)malloc(256);
-			char *mapName = (char*) STRING(gpGlobals->mapname);
-			ConVarRef hostNameCVar = ConVarRef("hostname");
-			string_t hostname;
-			if (hostNameCVar.IsValid())
-				hostname = MAKE_STRING(hostNameCVar.GetString());
-			else
-				hostname = MAKE_STRING("WebSpec Demo Server"); //Can't imagine when hostname would be invalid, but this is Source
-			int length = sprintf(buffer, "%c%s:%s:%s:%s", WSPACKET_Init, mapName, STRING(hostname), STRING(ws_teamName[1]), STRING(ws_teamName[0]));
-
-			SendPacketToOne(buffer, length, wsi);
-			free(buffer);
-
-			//Send connected players
-			IPlayerInfo *playerInfo;
-			for (int i=1; i<=gpGlobals->maxClients; i++) {
-				playerInfo = playerInfoManager->GetPlayerInfo(engine->PEntityOfEntIndex(i));
-				if (playerInfo != NULL && playerInfo->IsConnected()) {
-					buffer = (char *)malloc(256);
-					int userid = playerInfo->GetUserID();
-					int teamid = playerInfo->GetTeamIndex();
-					int health = playerInfo->GetHealth();
-					int maxHealth = playerInfo->GetMaxHealth();
-					bool alive = !playerInfo->IsDead();
-					string_t playerName = MAKE_STRING(playerInfo->GetName());
-					
-					CBaseEntity *playerEntity = serverGameEnts->EdictToBaseEntity(engine->PEntityOfEntIndex(i));
-					int playerClass = *MakePtr(int*, playerEntity, WSOffsets::pCTFPlayer__m_iClass);
-
-					float uberCharge = 0.0f;
-					
-					if (playerClass == TFClass_Medic) { 
-						CBaseCombatCharacter *playerCombatCharacter = CBaseEntity_MyCombatCharacterPointer(playerEntity);
-						
-						CBaseCombatWeapon *slot1Weapon = CBaseCombatCharacter_Weapon_GetSlot(playerCombatCharacter, 1);
-						
-						uberCharge = *MakePtr(float*, slot1Weapon, WSOffsets::pCWeaponMedigun__m_flChargeLevel);
-					}
-
-					int length = sprintf(buffer, "%c%d:%d:%d:%d:%d:%d:0:%d:%s", 'C', userid, teamid, playerClass,
-						health, maxHealth, alive, WSCompileRoundFloat(uberCharge*100.0f), STRING(playerName));
-
-					SendPacketToOne(buffer, length, wsi);
-					free(buffer);
-				}
-			}
-
-			break;
-		}
-		case LWS_CALLBACK_RECEIVE:
-		{
-			//Echo back whatever is received with a . preceding
-			//Useful to quickly test if WebSockets is working correctly
-
-			//Create buffer for response, + LibWebsockets padding (don't worry about this)
-			//len + 1 for '.'
-			unsigned char *buffer = (unsigned char *) malloc(len + 1 + 
-				LWS_SEND_BUFFER_PRE_PADDING + LWS_SEND_BUFFER_POST_PADDING);
-
-			//Put initial . into buffer, after padding
-			buffer[LWS_SEND_BUFFER_PRE_PADDING] = '.';
-
-			//Put sent message into response
-			for (unsigned int i=0; i < len; i++) {
-				buffer[LWS_SEND_BUFFER_PRE_PADDING + 1 + i] = ((char *) in)[i];
-			}
-
-			//Actually send
-			libwebsocket_write(wsi, &buffer[LWS_SEND_BUFFER_PRE_PADDING], len+1, LWS_WRITE_TEXT);
-
-			//Free memory
-			free(buffer);
-			break;
-		}
-		case LWS_CALLBACK_CLOSED:
-		{
-			std::vector<struct libwebsocket *>::iterator it;
-			it = std::find(ws_spectators.begin(), ws_spectators.end(), wsi);
-			ws_spectators.erase(it);
-		}
-		default:
-			break;
-	}
-
-	return 0;
-}
-
-static struct libwebsocket_protocols wsProtocols[] = {
-	// HTTP required I think, test TODO
-	{
-		"http-only",
-		webspec_callback_http,
-		0
-	},
-	{
-		"webspec",
-		webspec_callback,
-		0
-	},
-	{ //Also required I think, untested, TODO
-		NULL, NULL, 0
-	}
-};
 
 //=================================================================================
 // Thread to listen to clients without blocking
@@ -427,7 +285,7 @@ void WebSpecPlugin::FireGameEvent( KeyValues * event )
 
 void WebSpecPlugin::EventHandler_TeamInfo(KeyValues *event) {
 	int userID = event->GetInt("userid");
-	int clientIndex = WS_GetClientOfUserID(userID);
+	int clientIndex = GetClientIndexForUserID(userID);
 	int teamID = playerInfoManager->GetPlayerInfo(engine->PEntityOfEntIndex(clientIndex))->GetTeamIndex();
 	bool nameChanged = (event->GetInt("namechange") > 0);
 	
@@ -459,7 +317,7 @@ void WebSpecPlugin::EventHandler_TeamInfo(KeyValues *event) {
 	free(buffer);
 }
 
-static void SendPacketToAll(char *buffer, int length) {
+void SendPacketToAll(char *buffer, int length) {
 	unsigned char *packetBuffer = (unsigned char*)malloc(length + LWS_SEND_BUFFER_PRE_PADDING + LWS_SEND_BUFFER_POST_PADDING);
 
 	//Put sent message into response
@@ -476,7 +334,7 @@ static void SendPacketToAll(char *buffer, int length) {
 	free(packetBuffer);
 }
 
-static void SendPacketToOne(char *buffer, int length, struct libwebsocket *wsi) {
+void SendPacketToOne(char *buffer, int length, struct libwebsocket *wsi) {
 	unsigned char *packetBuffer = (unsigned char *)malloc(length + LWS_SEND_BUFFER_PRE_PADDING + LWS_SEND_BUFFER_POST_PADDING);
 
 	//Put sent message into response

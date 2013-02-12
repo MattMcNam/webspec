@@ -212,7 +212,11 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\callbacks.cpp" />
+    <ClCompile Include="src\definitions.cpp" />
+    <ClCompile Include="src\helpers.cpp" />
     <ClCompile Include="src\offsets.cpp" />
+    <ClCompile Include="src\vfuncs.cpp" />
     <ClCompile Include="src\webspec.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -225,11 +229,11 @@
     <Library Include="lib\ZLIB.lib" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\callbacks.h" />
     <ClInclude Include="src\offsets.h" />
-    <ClInclude Include="src\webspec-definitions.h" />
-    <ClInclude Include="src\webspec-dumping.h" />
-    <ClInclude Include="src\webspec-helpers.h" />
-    <ClInclude Include="src\webspec-vfuncs.h" />
+    <ClInclude Include="src\definitions.h" />
+    <ClInclude Include="src\helpers.h" />
+    <ClInclude Include="src\vfuncs.h" />
     <ClInclude Include="src\webspec.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

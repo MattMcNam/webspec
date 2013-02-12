@@ -13,11 +13,20 @@
 int WSOffsets::pCTFPlayer__m_iClass = 0;
 int WSOffsets::pCWeaponMedigun__m_flChargeLevel = 0;
 
+//=================================================================================
+// Find the offsets for all stored NetVars
+// TODO: change to bool when an offset can't be found
+//=================================================================================
 void WSOffsets::PrepareOffsets() {
 	WSOffsets::pCTFPlayer__m_iClass = WSOffsets::FindOffsetOfClassProp("CTFPlayer", "m_iClass");
 	WSOffsets::pCWeaponMedigun__m_flChargeLevel = WSOffsets::FindOffsetOfClassProp("CWeaponMedigun", "m_flChargeLevel");
 }
 
+//=================================================================================
+// Loop through all server classes until className is found, then crawl through the
+// class to find the property
+// TODO: return -1 when an offset is not found
+//=================================================================================
 int WSOffsets::FindOffsetOfClassProp(const char *className, const char *propName) {
 	ServerClass *sc = serverGameDLL->GetAllServerClasses();
 	while (sc) {
@@ -36,6 +45,9 @@ int WSOffsets::FindOffsetOfClassProp(const char *className, const char *propName
 	return 0;
 }
 
+//=================================================================================
+// Search through a class table, and any subtables, for a given property name
+//=================================================================================
 bool WSOffsets::CrawlForPropOffset(SendTable *sTable, const char *propName, int &offset) {
 	for (int i=0; i < sTable->GetNumProps(); i++) {
 		SendProp *sProp = sTable->GetProp(i);
