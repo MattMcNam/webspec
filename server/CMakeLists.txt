@@ -26,16 +26,20 @@ include_directories(${HL2SDK}/game/server)
 include_directories(${HL2SDK}/game/shared)
 
 set(HDR_PUBLIC
+	src/callbacks.h
+	src/definitions.h
+	src/helpers.h
 	src/offsets.h
+	src/vfuncs.h
 	src/webspec.h
-	src/webspec-definitions.h
-	src/webspec-dumping.h
-	src/webspec-helpers.h
-	src/webspec-vfuncs.h
 	)
 
 set(SOURCES
+	src/callbacks.cpp
+	src/definitions.cpp
+	src/helpers.cpp
 	src/offsets.cpp
+	src/vfuncs.cpp
 	src/webspec.cpp
 	)
 
@@ -49,10 +53,14 @@ if (UNIX)
 	add_definitions(-Usprintf -Ustrncpy -UPROTECTED_THINGS_ENABLE)
 	set(COMPILER_FLAGS "-fno-strict-aliasing -Wall -Werror -Wno-uninitialized -Wno-unused -Wno-switch -msse -m32 -mfpmath=sse -O3 -fno-exceptions -fno-threadsafe-statics -Wno-non-virtual-dtor -Wno-overloaded-virtual")
 	set(LINKER_FLAGS "-lm -m32 -static-libgcc -shared")
+else ()
+	add_definitions(/DWIN32 /D_WIN32 /DNDEBUG /D_WINDOWS /D_USRDLL /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE /D_MBCS /D_WINDLL)
+	set(COMPILER_FLAGS "/GF /Gm- /MT /GS- /Gy /fp:fast /Zc:wchar_t /Zc:forScope /GR /Gd /TP /analyze- /errorReport:prompt")
+	set(LINKER_FLAGS "/INCREMENTAL:NO /NOLOGO /NODEFAULTLIB:libc /NODEFAULTLIB:libcd /NODEFAULTLIB:libcmtd /MANIFEST:NO /TLBID:1 /DYNAMICBASE /NXCOMPAT /MACHINE:X86 /ERRORREPORT:PROMPT")
 endif ()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "$CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
 # Create the plugin
 add_library(webspec MODULE
