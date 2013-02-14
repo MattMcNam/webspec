@@ -20,7 +20,7 @@ GitHub contributors can edit this list as they wish; otherwise you can either:
     * Send message every *x* milliseconds of player locations (x to be determined, 300 worked with SourceMod)
     * Ditch chat between WebSpec spectators ?
     * Ditch sending amount of connected spectators to all spectators
-* **Linux build**, considering using CMake
+* Fix cmake w/ Windows
 * Move `webspec-dumping.h` functionality to another repo
 * Clean up code in various headers
     * Clean code style to more closely match Valve's

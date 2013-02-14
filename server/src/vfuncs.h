@@ -11,6 +11,8 @@
 #ifndef VFUNCS_H
 #define VFUNCS_H
 
+#include <stdint.h>
+
 class WSEmptyClass {};
 
 class CBaseEntity;

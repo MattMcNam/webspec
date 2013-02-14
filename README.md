@@ -6,16 +6,14 @@ Spectate a TF2 server from a browser via WebSockets & Canvas.
 Usage
 -
 **Server**  
-Build the server plugin, then drop `webspec.dll` into your tf/addons/ folder.  
-Load it with `plugin_load addons/webspec`, or create a VDF.  
-  
+Transitioning to CMake, please refer to `BUILD.LINUX.md` or `BUILD.WINDOWS.md` for instructions.  
 **Client**  
 To be added.
 
 To-do
 -
 Much.  
-See TODO.md
+See `TODO.md`
 
 License
 -

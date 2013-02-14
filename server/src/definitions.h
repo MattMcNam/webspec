@@ -11,7 +11,7 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 
-#include <string>
+#include <strings.h>
 
 // Event ints
 static const char *eventInts[] = {
