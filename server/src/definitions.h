@@ -11,8 +11,11 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 
+#ifdef _WIN32
+#include <string>
+#else
 #include <strings.h>
-
+#endif
 // Event ints
 static const char *eventInts[] = {
 	"tournament_stateupdate",

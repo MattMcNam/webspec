@@ -41,6 +41,7 @@ enum TFClass {
 };
 
 #define WSCompileRoundFloat(x) ((x)>=0?(int)((x)+0.5):(int)((x)-0.5))
+#define Round(x) WSCompileRoundFloat(x)
 
 extern int GetClientIndexForUserID(int userid);
 

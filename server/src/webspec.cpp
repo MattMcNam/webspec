@@ -34,6 +34,8 @@ static unsigned WSServerThread(void *params) {
 WebSpecPlugin g_WebSpecPlugin;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(WebSpecPlugin, IServerPluginCallbacks, INTERFACEVERSION_ISERVERPLUGINCALLBACKS, g_WebSpecPlugin );
 
+float g_lastUpdateTime;
+
 //---------------------------------------------------------------------------------
 // Purpose: constructor/destructor
 //---------------------------------------------------------------------------------
@@ -97,13 +99,21 @@ bool WebSpecPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfaceFn 
 	WSOffsets::PrepareOffsets();
 
 	//Init WebSocket server
-	const char *wsInterface = NULL;
-	const char *cert_path = NULL; //No SSL
-	const char *key_path = NULL;
-	int options = 0; //No special options needed
+	lws_context_creation_info *lwsInfo = new lws_context_creation_info();
+	lwsInfo->port = wsPort;
+	lwsInfo->iface = NULL;
+	lwsInfo->protocols = wsProtocols;
+	lwsInfo->extensions = libwebsocket_get_internal_extensions();
+	lwsInfo->ssl_cert_filepath = NULL;
+	lwsInfo->ssl_private_key_filepath = NULL;
+	lwsInfo->ssl_ca_filepath = NULL;
+	lwsInfo->gid = -1;
+	lwsInfo->uid = -1;
+	lwsInfo->options = 0;
+	lwsInfo->user = NULL;
+	lwsInfo->ka_time = 0;
 
-	wsContext = libwebsocket_create_context(wsPort, wsInterface, wsProtocols,
-		libwebsocket_internal_extensions, cert_path, key_path, NULL, -1, -1, options, NULL);
+	wsContext = libwebsocket_create_context(lwsInfo);
 
 	if (wsContext == NULL)
 		Msg("[WebSpec] failed to init libwebsockets\n");
@@ -113,6 +123,8 @@ bool WebSpecPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfaceFn 
 	WSServerThreadParams_t *params = new WSServerThreadParams_t;
 	params->ctx = wsContext;
 	CreateSimpleThread( WSServerThread, params );
+
+	g_lastUpdateTime = gpGlobals->curtime;
 
 	//Register cvars
 	ConVar_Register( 0 );
@@ -184,6 +196,55 @@ void WebSpecPlugin::ServerActivate( edict_t *pEdictList, int edictCount, int cli
 //---------------------------------------------------------------------------------
 void WebSpecPlugin::GameFrame( bool simulating )
 {
+	if (gpGlobals->curtime - g_lastUpdateTime > WEBSPEC_UPDATE_RATE_IN_SECONDS) {
+		
+		char *buffer = (char *)malloc(2048);
+		Vector playerOrigin;
+		QAngle playerAngles;
+		float playerUberCharge;
+		int userid, health, playerClass;
+
+		IPlayerInfo *playerInfo;
+		CBaseEntity *playerEntity;
+		int bufferLength;
+
+		bufferLength = sprintf(buffer, "O");
+
+		for (int i = 1; i < gpGlobals->maxClients; i++) {
+			playerInfo = playerInfoManager->GetPlayerInfo(engine->PEntityOfEntIndex(i));
+			if (playerInfo == NULL || !playerInfo->IsConnected()) continue;
+
+			if (strlen(buffer) > 1)
+				sprintf(buffer, "%s|", buffer);
+
+			userid = playerInfo->GetUserID();
+			health = playerInfo->GetHealth();
+			playerOrigin = playerInfo->GetAbsOrigin();
+			playerAngles = playerInfo->GetAbsAngles();
+
+			playerEntity = serverGameEnts->EdictToBaseEntity(engine->PEntityOfEntIndex(i));
+			playerClass = *MakePtr(int*, playerEntity, WSOffsets::pCTFPlayer__m_iClass);
+
+			if (playerClass == TFClass_Medic) {
+				CBaseCombatCharacter *playerCombatCharacter = CBaseEntity_MyCombatCharacterPointer(playerEntity);
+				CBaseCombatWeapon *slot1Weapon = CBaseCombatCharacter_Weapon_GetSlot(playerCombatCharacter, 1);
+				
+				playerUberCharge = *MakePtr(float*, slot1Weapon, WSOffsets::pCWeaponMedigun__m_flChargeLevel);
+			} else {
+				playerUberCharge = 0.0f;
+			}
+
+			bufferLength = sprintf(buffer, "%s%d:%d:%d:%d:%d:%d", buffer, userid, 
+				Round(playerOrigin.x), Round(playerOrigin.y), Round(playerAngles.y),
+				health, Round(playerUberCharge));
+		}
+
+		if (bufferLength == 1) return;
+
+		SendPacketToAll(buffer, bufferLength);
+
+		g_lastUpdateTime = gpGlobals->curtime;
+	}
 }
 
 //---------------------------------------------------------------------------------

@@ -70,7 +70,7 @@
     </CustomBuildStep>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(HL2SDK)\common;C:\Users\Matthew\Dev\libwebsockets\lib;$(HL2SDK)\public;$(HL2SDK)\public\tier0;$(HL2SDK)\public\tier1;$(HL2SDK)\game\server;$(HL2SDK)\game\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(HL2SDK)\common;$(LWS_DIR)\lib;$(HL2SDK)\public;$(HL2SDK)\public\tier0;$(HL2SDK)\public\tier1;$(HL2SDK)\game\server;$(HL2SDK)\game\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>true</MinimalRebuild>
@@ -100,11 +100,11 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;ws2_32.lib;websockets.lib;ZLIB.lib;mathlib.lib;tier0.lib;tier1.lib;tier2.lib;vstdlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)webspec.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(BOOSTROOT)\stage\lib;$(HL2SDK)\lib\common;$(HL2SDK)\lib\public;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(HL2SDK)\lib\public;lib\win32\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libc;libcd;libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -149,7 +149,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(HL2SDK)\common;C:\Users\Matthew\Dev\libwebsockets\lib;$(HL2SDK)\public;$(HL2SDK)\public\tier0;$(HL2SDK)\public\tier1;$(HL2SDK)\game\server;$(HL2SDK)\game\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(HL2SDK)\common;$(LWS_DIR)\lib;$(HL2SDK)\public;$(HL2SDK)\public\tier0;$(HL2SDK)\public\tier1;$(HL2SDK)\game\server;$(HL2SDK)\game\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
@@ -178,11 +178,11 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;ws2_32.lib;websockets.lib;ZLIB.lib;mathlib.lib;tier0.lib;tier1.lib;tier2.lib;vstdlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)webspec.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(BOOSTROOT)\stage\lib;$(HL2SDK)\lib\common;$(HL2SDK)\lib\public;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(HL2SDK)\lib\public;lib\win32\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libc;libcd;libcmtd;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -218,15 +218,6 @@
     <ClCompile Include="src\offsets.cpp" />
     <ClCompile Include="src\vfuncs.cpp" />
     <ClCompile Include="src\webspec.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="d:\hl2sdk-ob-valve\lib\public\mathlib.lib" />
-    <Library Include="d:\hl2sdk-ob-valve\lib\public\tier0.lib" />
-    <Library Include="d:\hl2sdk-ob-valve\lib\public\tier1.lib" />
-    <Library Include="d:\hl2sdk-ob-valve\lib\public\tier2.lib" />
-    <Library Include="d:\hl2sdk-ob-valve\lib\public\vstdlib.lib" />
-    <Library Include="lib\websockets.lib" />
-    <Library Include="lib\ZLIB.lib" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\callbacks.h" />

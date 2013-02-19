@@ -49,6 +49,8 @@ IServerGameDLL *serverGameDLL = NULL; // Offsets
 
 CGlobalVars *gpGlobals = NULL;
 
+#define WEBSPEC_UPDATE_RATE_IN_SECONDS 0.3
+
 std::vector<struct libwebsocket *> ws_spectators;
 string_t ws_teamName[2];
 bool ws_teamReadyState[2];

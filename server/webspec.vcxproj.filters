@@ -15,29 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="d:\hl2sdk-ob-valve\lib\public\mathlib.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="d:\hl2sdk-ob-valve\lib\public\tier0.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="d:\hl2sdk-ob-valve\lib\public\tier1.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="d:\hl2sdk-ob-valve\lib\public\tier2.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="d:\hl2sdk-ob-valve\lib\public\vstdlib.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="lib\websockets.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="lib\ZLIB.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="src\webspec.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

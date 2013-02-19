@@ -1,10 +1,8 @@
 TF2 WebSpec To-do list
 ======================
 
-GitHub contributors can edit this list as they wish; otherwise you can either:
-
-1. Create a new 'issue' via GitHub and tag it as `enhancement` or `todo` **preferred**
-2. Modify this file in your own fork and submit a pull request, *along with relevant/useful code changes*
+GitHub contributors can edit this list as they wish.  
+Otherwise you can create a new 'issue' via GitHub and tag it as `enhancement` or `todo`  
 
 --
 
@@ -17,20 +15,21 @@ GitHub contributors can edit this list as they wish; otherwise you can either:
     * Send message when player spawns
     * Send message when player changes name
     * Send message when player changes team
-    * Send message every *x* milliseconds of player locations (x to be determined, 300 worked with SourceMod)
     * Ditch chat between WebSpec spectators ?
     * Ditch sending amount of connected spectators to all spectators
-* Fix cmake w/ Windows
-* Move `webspec-dumping.h` functionality to another repo
+* Fix cmake with Windows
 * Clean up code in various headers
     * Clean code style to more closely match Valve's
 * Move from virtual function indexes to signature scanning where possible
 * Ideally, make all code as 'update-proof' as possible
+    * Eg. Signature scanning rather than virtual function indexes
 * Look into sending binary WebSocket messages
 
 **Client**
 
-* Redo rendering code to use variable framerate (adding to repo after this)
+* _Basically, a full rewrite from SrcTV2D base_
+* _Added to repo to allow developers to test with_
+* Redo rendering code to use variable framerate
 * Add Pyro portrait (currently uses Heavy's)
     * Get transparant class icons
 * Replace player dots with class emblems

@@ -55,7 +55,7 @@ if (UNIX)
 	set(LINKER_FLAGS "-lm -m32 -static-libgcc -shared")
 else ()
 	add_definitions(/DWIN32 /D_WIN32 /DNDEBUG /D_WINDOWS /D_USRDLL /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE /D_MBCS /D_WINDLL)
-	set(COMPILER_FLAGS "/GF /Gm- /MT /GS- /Gy /fp:fast /Zc:wchar_t /Zc:forScope /GR /Gd /TP /analyze- /errorReport:prompt")
+	set(COMPILER_FLAGS "/GF /Gm- /GS- /Gy /fp:fast /Zc:wchar_t /Zc:forScope /GR /Gd /TP /analyze- /errorReport:prompt")
 	set(LINKER_FLAGS "/INCREMENTAL:NO /NOLOGO /NODEFAULTLIB:libc /NODEFAULTLIB:libcd /NODEFAULTLIB:libcmtd /MANIFEST:NO /TLBID:1 /DYNAMICBASE /NXCOMPAT /MACHINE:X86 /ERRORREPORT:PROMPT")
 endif ()
 
