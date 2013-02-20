@@ -43,7 +43,7 @@ int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocket *wsi,
 				hostname = MAKE_STRING(hostNameCVar.GetString());
 			else
 				hostname = MAKE_STRING("WebSpec Demo Server"); //Can't imagine when hostname would be invalid, but this is Source
-			int length = sprintf(buffer, "%c%s:%s:%s:%s", WSPACKET_Init, mapName, STRING(hostname), STRING(ws_teamName[1]), STRING(ws_teamName[0]));
+			int length = sprintf(buffer, "%c%s:%s:%s:%s", WSPacket_Init, mapName, STRING(hostname), STRING(ws_teamName[1]), STRING(ws_teamName[0]));
 
 			SendPacketToOne(buffer, length, wsi);
 			free(buffer);

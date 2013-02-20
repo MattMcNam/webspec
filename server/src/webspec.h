@@ -90,6 +90,8 @@ public:
 
 	// Event Handlers
 	void EventHandler_TeamInfo(KeyValues *event);
+	void EventHandler_PlayerDeath(KeyValues *event);
+	void EventHandler_PlayerSpawn(KeyValues *event);
 private:
 	struct libwebsocket_context *wsContext;
 	int wsPort;

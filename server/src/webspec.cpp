@@ -212,7 +212,7 @@ void WebSpecPlugin::GameFrame( bool simulating )
 
 		for (int i = 1; i < gpGlobals->maxClients; i++) {
 			playerInfo = playerInfoManager->GetPlayerInfo(engine->PEntityOfEntIndex(i));
-			if (playerInfo == NULL || !playerInfo->IsConnected()) continue;
+			if (playerInfo == NULL || !playerInfo->IsConnected() || playerInfo->IsDead()) continue;
 
 			if (strlen(buffer) > 1)
 				sprintf(buffer, "%s|", buffer);
@@ -242,6 +242,7 @@ void WebSpecPlugin::GameFrame( bool simulating )
 		if (bufferLength == 1) return;
 
 		SendPacketToAll(buffer, bufferLength);
+		free(buffer);
 
 		g_lastUpdateTime = gpGlobals->curtime;
 	}
@@ -335,16 +336,27 @@ void WebSpecPlugin::FireGameEvent( KeyValues * event )
 		EventHandler_TeamInfo(event);
 		break;
 	}
+	case Event_PlayerDeath: 
+	{
+		EventHandler_PlayerDeath(event);
+		break;
+	}
+	case Event_PlayerSpawn:
+	{
+		EventHandler_PlayerSpawn(event);
+	}
 	default:
 		break;
 	}
 }
 
 //=================================================================================
-// Various Event Handlers
+// Various Event Handlers, consider moving to separate file
 //=================================================================================
 
 void WebSpecPlugin::EventHandler_TeamInfo(KeyValues *event) {
+	if (ws_spectators.size() == 0) return;
+
 	int userID = event->GetInt("userid");
 	int clientIndex = GetClientIndexForUserID(userID);
 	int teamID = playerInfoManager->GetPlayerInfo(engine->PEntityOfEntIndex(clientIndex))->GetTeamIndex();
@@ -372,9 +384,39 @@ void WebSpecPlugin::EventHandler_TeamInfo(KeyValues *event) {
 		readyState = ws_teamReadyState[0];
 	}
 
-	int length = sprintf(buffer, "%c%i:%s:%i", WSPACKET_TeamInfo, teamID, STRING(teamName), readyState);
+	int length = sprintf(buffer, "%c%i:%s:%i", WSPacket_TeamInfo, teamID, STRING(teamName), readyState);
 	SendPacketToAll(buffer, length);
 
+	free(buffer);
+}
+
+void WebSpecPlugin::EventHandler_PlayerDeath(KeyValues *event) {
+	if (ws_spectators.size() == 0) return;
+
+	int victim = event->GetInt("userid");
+	int attacker = event->GetInt("attacker");
+	string_t weapon = MAKE_STRING(event->GetString("weapon"));
+
+	// Should buffers be malloc'd like this, or given a value that 'should be large enough'?
+	char *buffer = (char*)malloc(1 + 4*2 + strlen(weapon.ToCStr()));
+	int length = sprintf(buffer, "%c%d:%d:%s", WSPacket_PlayerDeath, victim, attacker, STRING(weapon));
+	SendPacketToAll(buffer, length);
+	free(buffer);
+}
+
+void WebSpecPlugin::EventHandler_PlayerSpawn(KeyValues *event) {
+	if (ws_spectators.size() == 0) return;
+
+	int userid = event->GetInt("userid");
+	int tfClass = event->GetInt("class");
+	int clientIndex = GetClientIndexForUserID(userid);
+	IPlayerInfo *playerInfo = playerInfoManager->GetPlayerInfo(engine->PEntityOfEntIndex(clientIndex));
+	int health = playerInfo->GetHealth();
+	int maxHealth = playerInfo->GetMaxHealth();
+
+	char *buffer = (char*)malloc(1 + 4*4);
+	int length = sprintf(buffer, "%c%d:%d:%d:%d", WSPacket_PlayerSpawn, userid, tfClass, health, maxHealth);
+	SendPacketToAll(buffer, length);
 	free(buffer);
 }
 

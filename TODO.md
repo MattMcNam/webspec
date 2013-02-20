@@ -10,9 +10,7 @@ Otherwise you can create a new 'issue' via GitHub and tag it as `enhancement` or
 
 * Feature parity with SourceMod base, `webspec.sp` (Remove once these are implemented)
     * Send message when player connects or disconnects
-    * Send message when players chat
-    * Send message when player dies, add extra flag if uber was dropped
-    * Send message when player spawns
+    * Send message when players chat (only during pause and only to casters??)
     * Send message when player changes name
     * Send message when player changes team
     * Ditch chat between WebSpec spectators ?
