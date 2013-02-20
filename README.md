@@ -7,7 +7,7 @@ Usage
 -
 **Server**  
 Transitioning to CMake, please refer to `BUILD.LINUX.md` or `BUILD.WINDOWS.md` in the server directory.  
-For Linux builds: GCC & Clang are more pedantic, so expect new warnings and errors. Running Clang Static Analyzer is also recommended.
+For Linux builds: GCC & Clang are more pedantic, so expect new warnings and errors. Running Clang Static Analyzer is also recommended.  
 **Client**  
 Change `WebSpec.host` to your server's IP and the WebSpec port. (default localhost:28020)  
 Note that Chrome requires the `--allow-file-access-from-files` launch option if running from disk.
