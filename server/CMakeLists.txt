@@ -29,6 +29,7 @@ set(HDR_PUBLIC
 	src/callbacks.h
 	src/definitions.h
 	src/helpers.h
+	src/win32_helpers.h
 	src/offsets.h
 	src/vfuncs.h
 	src/webspec.h

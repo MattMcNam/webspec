@@ -34,8 +34,8 @@ int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocket *wsi,
 			ws_spectators.push_back(wsi);
 			
 			// Send basic game info to let client set up
-			// MapName, Server name (may remove), current team names (TF2 5-letter, not full)
-			char *buffer = (char*)malloc(256);
+			// MapName, Server name (may remove), current team names
+			char *buffer = (char*)malloc(MAX_BUFFER_SIZE);
 			char *mapName = (char*) STRING(gpGlobals->mapname);
 			ConVarRef hostNameCVar = ConVarRef("hostname");
 			string_t hostname;
@@ -43,7 +43,7 @@ int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocket *wsi,
 				hostname = MAKE_STRING(hostNameCVar.GetString());
 			else
 				hostname = MAKE_STRING("WebSpec Demo Server"); //Can't imagine when hostname would be invalid, but this is Source
-			int length = sprintf(buffer, "%c%s:%s:%s:%s", WSPacket_Init, mapName, STRING(hostname), STRING(ws_teamName[1]), STRING(ws_teamName[0]));
+			int length = snprintf(buffer, MAX_BUFFER_SIZE, "%c%s:%s:%s:%s", WSPacket_Init, mapName, STRING(hostname), STRING(ws_teamName[1]), STRING(ws_teamName[0]));
 
 			SendPacketToOne(buffer, length, wsi);
 			free(buffer);
@@ -53,7 +53,7 @@ int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocket *wsi,
 			for (int i=1; i<=gpGlobals->maxClients; i++) {
 				playerInfo = playerInfoManager->GetPlayerInfo(engine->PEntityOfEntIndex(i));
 				if (playerInfo != NULL && playerInfo->IsConnected()) {
-					buffer = (char *)malloc(256);
+					buffer = (char *)malloc(MAX_BUFFER_SIZE);
 					int userid = playerInfo->GetUserID();
 					int teamid = playerInfo->GetTeamIndex();
 					int health = playerInfo->GetHealth();
@@ -75,8 +75,8 @@ int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocket *wsi,
 						uberCharge = *MakePtr(float*, slot1Weapon, WSOffsets::pCWeaponMedigun__m_flChargeLevel);
 					}
 
-					int length = sprintf(buffer, "%c%d:%d:%d:%d:%d:%d:0:%d:%s", 'C', userid, teamid, playerClass,
-						health, maxHealth, alive, WSCompileRoundFloat(uberCharge*100.0f), STRING(playerName));
+					int length = snprintf(buffer, MAX_BUFFER_SIZE, "%c%d:%d:%d:%d:%d:%d:0:%d:%s", 'C', userid, teamid, playerClass,
+						health, maxHealth, alive, Round(uberCharge*100.0f), STRING(playerName));
 
 					SendPacketToOne(buffer, length, wsi);
 					free(buffer);
