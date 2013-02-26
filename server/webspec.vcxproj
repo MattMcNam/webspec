@@ -226,6 +226,7 @@
     <ClInclude Include="src\helpers.h" />
     <ClInclude Include="src\vfuncs.h" />
     <ClInclude Include="src\webspec.h" />
+    <ClInclude Include="src\win32_helpers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

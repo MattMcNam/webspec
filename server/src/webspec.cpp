@@ -10,6 +10,8 @@
 
 #include "webspec.h"
 
+#define PLUGIN_DESCRIPTION "WebSpec a1"
+
 //=================================================================================
 // Thread to listen to clients without blocking
 // Based heavily on https://developer.valvesoftware.com/wiki/Threads
@@ -126,6 +128,9 @@ bool WebSpecPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfaceFn 
 
 	g_lastUpdateTime = gpGlobals->curtime;
 
+	//Everything seems ok!
+	Msg("%s loaded!\n", PLUGIN_DESCRIPTION);
+
 	//Register cvars
 	ConVar_Register( 0 );
 	return true;
@@ -145,7 +150,6 @@ void WebSpecPlugin::Unload( void )
 	Sleep(60);
 #endif
 	libwebsocket_context_destroy(wsContext);
-	//Context will be cleaned up in thread, thread should then end
 
 	ConVar_Unregister( );
 	DisconnectTier2Libraries( );
@@ -171,7 +175,7 @@ void WebSpecPlugin::UnPause( void )
 //---------------------------------------------------------------------------------
 const char *WebSpecPlugin::GetPluginDescription( void )
 {
-	return "WebSpec Plugin";
+	return PLUGIN_DESCRIPTION;
 }
 
 //---------------------------------------------------------------------------------
@@ -179,7 +183,7 @@ const char *WebSpecPlugin::GetPluginDescription( void )
 //---------------------------------------------------------------------------------
 void WebSpecPlugin::LevelInit( char const *pMapName )
 {
-	//WSOnNewMap( pMapName );
+	//TODO: Send new map notice to spectators
 	gameEventManager->AddListener( this, true );
 }
 
@@ -198,7 +202,7 @@ void WebSpecPlugin::GameFrame( bool simulating )
 {
 	if (gpGlobals->curtime - g_lastUpdateTime > WEBSPEC_UPDATE_RATE_IN_SECONDS) {
 		
-		char *buffer = (char *)malloc(2048);
+		char *buffer = (char *)malloc(MAX_BUFFER_SIZE);
 		Vector playerOrigin;
 		QAngle playerAngles;
 		float playerUberCharge;
@@ -215,7 +219,7 @@ void WebSpecPlugin::GameFrame( bool simulating )
 			if (playerInfo == NULL || !playerInfo->IsConnected() || playerInfo->IsDead()) continue;
 
 			if (strlen(buffer) > 1)
-				sprintf(buffer, "%s|", buffer);
+				snprintf(buffer, MAX_BUFFER_SIZE, "%s|", buffer);
 
 			userid = playerInfo->GetUserID();
 			health = playerInfo->GetHealth();
@@ -234,9 +238,9 @@ void WebSpecPlugin::GameFrame( bool simulating )
 				playerUberCharge = 0.0f;
 			}
 
-			bufferLength = sprintf(buffer, "%s%d:%d:%d:%d:%d:%d", buffer, userid, 
+			bufferLength = snprintf(buffer, MAX_BUFFER_SIZE, "%s%d:%d:%d:%d:%d:%d", buffer, userid, 
 				Round(playerOrigin.x), Round(playerOrigin.y), Round(playerAngles.y),
-				health, Round(playerUberCharge));
+				health, Round(playerUberCharge*100.0f));
 		}
 
 		if (bufferLength == 1) return;
@@ -364,7 +368,7 @@ void WebSpecPlugin::EventHandler_TeamInfo(KeyValues *event) {
 	
 	string_t teamName;
 	int readyState;
-	char *buffer = (char*)malloc(30);
+	char *buffer = (char*)malloc(MAX_BUFFER_SIZE);
 	
 	if (teamID == TFTeam_Red) {
 		if (nameChanged)
@@ -384,7 +388,7 @@ void WebSpecPlugin::EventHandler_TeamInfo(KeyValues *event) {
 		readyState = ws_teamReadyState[0];
 	}
 
-	int length = sprintf(buffer, "%c%i:%s:%i", WSPacket_TeamInfo, teamID, STRING(teamName), readyState);
+	int length = snprintf(buffer, MAX_BUFFER_SIZE, "%c%i:%s:%i", WSPacket_TeamInfo, teamID, STRING(teamName), readyState);
 	SendPacketToAll(buffer, length);
 
 	free(buffer);
@@ -397,9 +401,8 @@ void WebSpecPlugin::EventHandler_PlayerDeath(KeyValues *event) {
 	int attacker = event->GetInt("attacker");
 	string_t weapon = MAKE_STRING(event->GetString("weapon"));
 
-	// Should buffers be malloc'd like this, or given a value that 'should be large enough'?
-	char *buffer = (char*)malloc(1 + 4*2 + strlen(weapon.ToCStr()));
-	int length = sprintf(buffer, "%c%d:%d:%s", WSPacket_PlayerDeath, victim, attacker, STRING(weapon));
+	char *buffer = (char*)malloc(MAX_BUFFER_SIZE);
+	int length = snprintf(buffer, MAX_BUFFER_SIZE, "%c%d:%d:%s", WSPacket_PlayerDeath, victim, attacker, STRING(weapon));
 	SendPacketToAll(buffer, length);
 	free(buffer);
 }
@@ -414,8 +417,8 @@ void WebSpecPlugin::EventHandler_PlayerSpawn(KeyValues *event) {
 	int health = playerInfo->GetHealth();
 	int maxHealth = playerInfo->GetMaxHealth();
 
-	char *buffer = (char*)malloc(1 + 4*4);
-	int length = sprintf(buffer, "%c%d:%d:%d:%d", WSPacket_PlayerSpawn, userid, tfClass, health, maxHealth);
+	char *buffer = (char*)malloc(MAX_BUFFER_SIZE);
+	int length = snprintf(buffer, MAX_BUFFER_SIZE, "%c%d:%d:%d:%d", WSPacket_PlayerSpawn, userid, tfClass, health, maxHealth);
 	SendPacketToAll(buffer, length);
 	free(buffer);
 }

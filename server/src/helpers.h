@@ -11,6 +11,10 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+#ifdef WIN32
+#include "win32_helpers.h"
+#endif
+
 #include "eiface.h"
 #include "game/server/iplayerinfo.h"
 
@@ -40,8 +44,7 @@ enum TFClass {
 	TFClass_Engineer
 };
 
-#define WSCompileRoundFloat(x) ((x)>=0?(int)((x)+0.5):(int)((x)-0.5))
-#define Round(x) WSCompileRoundFloat(x)
+#define Round(x) ((x)>=0?(int)((x)+0.5):(int)((x)-0.5))
 
 extern int GetClientIndexForUserID(int userid);
 
