@@ -44,6 +44,7 @@ float g_lastUpdateTime;
 WebSpecPlugin::WebSpecPlugin()
 {
 	wsPort = 28020;
+	wsContext = NULL;
 }
 
 WebSpecPlugin::~WebSpecPlugin()
@@ -243,7 +244,10 @@ void WebSpecPlugin::GameFrame( bool simulating )
 				health, Round(playerUberCharge*100.0f));
 		}
 
-		if (bufferLength == 1) return;
+		if (bufferLength == 1) {
+			free(buffer);
+			return;
+		}
 
 		SendPacketToAll(buffer, bufferLength);
 		free(buffer);
@@ -359,7 +363,7 @@ void WebSpecPlugin::FireGameEvent( KeyValues * event )
 //=================================================================================
 
 void WebSpecPlugin::EventHandler_TeamInfo(KeyValues *event) {
-	if (ws_spectators.size() == 0) return;
+	if (ws_spectators.empty()) return;
 
 	int userID = event->GetInt("userid");
 	int clientIndex = GetClientIndexForUserID(userID);
@@ -395,7 +399,7 @@ void WebSpecPlugin::EventHandler_TeamInfo(KeyValues *event) {
 }
 
 void WebSpecPlugin::EventHandler_PlayerDeath(KeyValues *event) {
-	if (ws_spectators.size() == 0) return;
+	if (ws_spectators.empty()) return;
 
 	int victim = event->GetInt("userid");
 	int attacker = event->GetInt("attacker");
@@ -408,7 +412,7 @@ void WebSpecPlugin::EventHandler_PlayerDeath(KeyValues *event) {
 }
 
 void WebSpecPlugin::EventHandler_PlayerSpawn(KeyValues *event) {
-	if (ws_spectators.size() == 0) return;
+	if (ws_spectators.empty()) return;
 
 	int userid = event->GetInt("userid");
 	int tfClass = event->GetInt("class");
