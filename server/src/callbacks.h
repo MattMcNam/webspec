@@ -31,7 +31,7 @@ extern IPlayerInfoManager *playerInfoManager;
 extern IServerGameEnts *serverGameEnts;
 extern CGlobalVars *gpGlobals;
 
-extern std::vector<struct libwebsocket *> ws_spectators;
+extern CUtlVector<struct libwebsocket *> ws_spectators;
 extern string_t ws_teamName[2];
 
 #define MAX_BUFFER_SIZE 2048
