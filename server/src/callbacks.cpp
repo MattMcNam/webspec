@@ -31,7 +31,7 @@ int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocket *wsi,
 		case LWS_CALLBACK_ESTABLISHED:
 		{
 			// New connection
-			ws_spectators.push_back(wsi);
+			ws_spectators.AddToTail(wsi);
 			
 			// Send basic game info to let client set up
 			// MapName, Server name (may remove), current team names
@@ -112,9 +112,7 @@ int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocket *wsi,
 		}
 		case LWS_CALLBACK_CLOSED:
 		{
-			std::vector<struct libwebsocket *>::iterator it;
-			it = std::find(ws_spectators.begin(), ws_spectators.end(), wsi);
-			ws_spectators.erase(it);
+			ws_spectators.FindAndRemove(wsi);
 		}
 		default:
 			break;

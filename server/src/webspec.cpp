@@ -57,7 +57,6 @@ WebSpecPlugin::~WebSpecPlugin()
 bool WebSpecPlugin::Load(	CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameServerFactory )
 {
 	ConnectTier1Libraries( &interfaceFactory, 1 );
-	ConnectTier2Libraries( &interfaceFactory, 1 );
 
 	playerInfoManager = (IPlayerInfoManager *)gameServerFactory(INTERFACEVERSION_PLAYERINFOMANAGER,NULL);
 	if ( !playerInfoManager )
@@ -153,7 +152,6 @@ void WebSpecPlugin::Unload( void )
 	libwebsocket_context_destroy(wsContext);
 
 	ConVar_Unregister( );
-	DisconnectTier2Libraries( );
 	DisconnectTier1Libraries( );
 }
 
@@ -201,7 +199,8 @@ void WebSpecPlugin::ServerActivate( edict_t *pEdictList, int edictCount, int cli
 //---------------------------------------------------------------------------------
 void WebSpecPlugin::GameFrame( bool simulating )
 {
-	if (gpGlobals->curtime - g_lastUpdateTime > WEBSPEC_UPDATE_RATE_IN_SECONDS) {
+	if (gpGlobals->curtime - g_lastUpdateTime > WEBSPEC_UPDATE_RATE_IN_SECONDS
+		&& ws_spectators.Count() > 0) {
 		
 		char *buffer = (char *)malloc(MAX_BUFFER_SIZE);
 		Vector playerOrigin;
@@ -363,7 +362,7 @@ void WebSpecPlugin::FireGameEvent( KeyValues * event )
 //=================================================================================
 
 void WebSpecPlugin::EventHandler_TeamInfo(KeyValues *event) {
-	if (ws_spectators.empty()) return;
+	if (ws_spectators.Count() == 0) return;
 
 	int userID = event->GetInt("userid");
 	int clientIndex = GetClientIndexForUserID(userID);
@@ -399,7 +398,7 @@ void WebSpecPlugin::EventHandler_TeamInfo(KeyValues *event) {
 }
 
 void WebSpecPlugin::EventHandler_PlayerDeath(KeyValues *event) {
-	if (ws_spectators.empty()) return;
+	if (ws_spectators.Count() == 0) return;
 
 	int victim = event->GetInt("userid");
 	int attacker = event->GetInt("attacker");
@@ -412,7 +411,7 @@ void WebSpecPlugin::EventHandler_PlayerDeath(KeyValues *event) {
 }
 
 void WebSpecPlugin::EventHandler_PlayerSpawn(KeyValues *event) {
-	if (ws_spectators.empty()) return;
+	if (ws_spectators.Count() == 0) return;
 
 	int userid = event->GetInt("userid");
 	int tfClass = event->GetInt("class");
@@ -436,10 +435,8 @@ void SendPacketToAll(char *buffer, int length) {
 	}
 	
 	//Send to all clients
-	struct libwebsocket *wsi;
-	for (unsigned int i=0; i<ws_spectators.size(); i++) {
-		wsi = ws_spectators.at(i);
-		libwebsocket_write(wsi, &packetBuffer[LWS_SEND_BUFFER_PRE_PADDING], length, LWS_WRITE_TEXT);
+	for (int i = 0; i < ws_spectators.Count(); i++) {
+		libwebsocket_write(ws_spectators[i], &packetBuffer[LWS_SEND_BUFFER_PRE_PADDING], length, LWS_WRITE_TEXT);
 	}
 	free(packetBuffer);
 }
