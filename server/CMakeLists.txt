@@ -47,24 +47,37 @@ set(SOURCES
 source_group("Header Files" FILES ${HDR_PUBLIC})
 source_group("Source FIles" FILES ${SOURCES})
 
-# Setup defines, compiler options and linker options
-set(DBG_DEFINES "-D_DEBUG -DDEBUG")
-if (UNIX)
-	add_definitions(-Dstricmp=strcasecmp -D_stricmp=strcasecmp -D_snprintf=snprintf -D_vsnprintf=vsnprintf -DHAVE_STDINT_H -DGNUC -DNDEBUG -D_LINUX -DLINUX)
+# Setup defines, compiler options and linker options for each platform
+if(UNIX) # Common Unix settings
+	add_definitions(-Dstricmp=strcasecmp -D_stricmp=strcasecmp -D_snprintf=snprintf -D_vsnprintf=vsnprintf -DHAVE_STDINT_H -DGNUC -DNDEBUG)
 	add_definitions(-Usprintf -Ustrncpy -UPROTECTED_THINGS_ENABLE)
-	set(COMPILER_FLAGS "-fno-strict-aliasing -Wall -Werror -Wno-uninitialized -Wno-unused -Wno-switch -msse -m32 -mfpmath=sse -O3 -fno-exceptions -fno-threadsafe-statics -Wno-non-virtual-dtor -Wno-overloaded-virtual")
-	set(LINKER_FLAGS "-lm -m32 -static-libgcc -shared")
-else ()
-	add_definitions(/DWIN32 /D_WIN32 /DNDEBUG /D_WINDOWS /D_USRDLL /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE /D_MBCS /D_WINDLL)
-	set(COMPILER_FLAGS "/GF /Gm- /GS- /Gy /fp:fast /Zc:wchar_t /Zc:forScope /GR /Gd /TP /analyze- /errorReport:prompt")
-	set(LINKER_FLAGS "/INCREMENTAL:NO /NOLOGO /NODEFAULTLIB:libc /NODEFAULTLIB:libcd /NODEFAULTLIB:libcmtd /MANIFEST:NO /TLBID:1 /DYNAMICBASE /NXCOMPAT /MACHINE:X86 /ERRORREPORT:PROMPT")
-endif ()
+	set(COMPILER_FLAGS "-fno-strict-aliasing -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Werror -Wno-uninitialized -Wno-unused -Wno-switch -msse -m32 -fno-exceptions -fno-threadsafe-statics -Wno-non-virtual-dtor -Wno-overloaded-virtual")
+	set(LINKER_FLAGS "-m32")
+	if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+		add_definitions(-DOSX -D_OSX)
+		set(LINKER_FLAGS "${LINKER_FLAGS} -mmacosx-version-min=10.5 -arch i386 -dynamiclib")
+	else() # Assume Linux
+		add_definitions(-DLINUX -D_LINUX)
+		set(COMPILER_FLAGS "${COMPILER_FLAGS} -mfpmath=sse")
+		set(LINKER_FLAGS "${LINKER_FLAGS} -shared")
+	endif()
+else() # Windows
+	# Force use of static libs
+	# Credit SteveL & brofield on StackOverflow
+	foreach(flag_var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINOFO)
+		string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+	endforeach()
+	
+	add_definitions(/D_CRT_SECURE_NO_DEPRECATE /D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_DEPRECATE)
+	set(COMPILER_FLAGS "/EHsc /DR- /W3 /nologo /Zi /TP")
+	set(LINKER_FLAGS "/MACHINE:X86 /SUBSYSTEM:WINDOWS")
+endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_FLAGS}")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
 # Create the plugin
-add_library(webspec MODULE
+add_library(webspec SHARED
 	${HDR_PUBLIC}
 	${SOURCES})
 
@@ -74,27 +87,35 @@ set_target_properties(webspec PROPERTIES PREFIX "")
 # Link various libraries
 
 # Various HL2SDK libs, websockets and zlib
-if (WIN32)
+if(WIN32)
 	target_link_libraries(webspec ${HL2SDK}/lib/public/mathlib.lib)
 	target_link_libraries(webspec ${HL2SDK}/lib/public/tier0.lib)
 	target_link_libraries(webspec ${HL2SDK}/lib/public/tier1.lib)
-	target_link_libraries(webspec ${HL2SDK}/lib/public/tier2.lib)
 	target_link_libraries(webspec ${HL2SDK}/lib/public/vstdlib.lib)
 	target_link_libraries(webspec ${PROJECT_SOURCE_DIR}/lib/websockets.lib)
 	target_link_libraries(webspec ${PROJECT_SOURCE_DIR}/lib/ZLIB.lib)
 else()
-	target_link_libraries(webspec ${HL2SDK}/lib/linux/mathlib_i486.a)
-	target_link_libraries(webspec ${HL2SDK}/lib/linux/libtier0_srv.so)
-	target_link_libraries(webspec ${HL2SDK}/lib/linux/tier1_i486.a)
-	target_link_libraries(webspec ${HL2SDK}/lib/linux/tier2_i486.a)
-	target_link_libraries(webspec ${HL2SDK}/lib/linux/libvstdlib_srv.so)
-	target_link_libraries(webspec ${PROJECT_SOURCE_DIR}/lib/linux/libwebsockets.a)
-	find_package(ZLIB REQUIRED)
-	target_link_libraries(webspec ${ZLIB_LIBRARIES})
+	if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+		target_link_libraries(webspec ${HL2SDK}/lib/mac/mathlib_i486.a)
+		target_link_libraries(webspec ${HL2SDK}/lib/mac/libtier0.dylib)
+		target_link_libraries(webspec ${HL2SDK}/lib/mac/tier1_i486.a)
+		target_link_libraries(webspec ${HL2SDK}/lib/mac/libvstdlib.dylib)
+		target_link_libraries(webspec ${PROJECT_SOURCE_DIR}/lib/mac/libwebsockets.a)
+		find_package(ZLIB REQUIRED)
+		target_link_libraries(webspec ${ZLIB_LIBRARIES})
+	else()
+		target_link_libraries(webspec ${HL2SDK}/lib/linux/mathlib_i486.a)
+		target_link_libraries(webspec ${HL2SDK}/lib/linux/libtier0_srv.so)
+		target_link_libraries(webspec ${HL2SDK}/lib/linux/tier1_i486.a)
+		target_link_libraries(webspec ${HL2SDK}/lib/linux/libvstdlib_srv.so)
+		target_link_libraries(webspec ${PROJECT_SOURCE_DIR}/lib/linux/libwebsockets.a)
+		find_package(ZLIB REQUIRED)
+		target_link_libraries(webspec ${ZLIB_LIBRARIES})
+	endif()
 endif()
 
 # Platform specifics
-if (WIN32)
+if(WIN32)
 	target_link_libraries(webspec ws2_32.lib)
 else()
 	target_link_libraries(webspec m)

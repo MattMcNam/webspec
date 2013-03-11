@@ -144,7 +144,7 @@ void WebSpecPlugin::Unload( void )
 	gameEventManager->RemoveListener( this ); // make sure we are unloaded from the event system
 
 	ws_shouldListen = false;
-#ifdef _LINUX
+#if defined(_LINUX) || defined(_OSX)
 	usleep(60*1000);
 #else
 	Sleep(60);
