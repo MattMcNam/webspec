@@ -12,8 +12,8 @@ set(PACKAGE_URL "https://github.com/SBlue/webspec")
 set(VERSION "${PACKAGE_VERSION}")
 
 include_directories(${PROJECT_BINARY_DIR})
-# Put final product at the root of the build directory
-SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+# Put final product in 'bin' folder
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 
 # Include source, libwebsockets headers and hl2sdk
 include_directories(${PROJECT_SOURCE_DIR}/src)
