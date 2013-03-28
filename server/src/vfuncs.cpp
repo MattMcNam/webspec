@@ -16,7 +16,7 @@ CBaseCombatWeapon *CBaseCombatCharacter_Weapon_GetSlot(CBaseCombatCharacter *pTh
 	void *func = vtable[VFUNCINDEX_CBaseCombatCharacter_Weapon_GetSlot];
 
 	union { CBaseCombatWeapon *(WSEmptyClass::*mfpnew)(int);
-#ifndef __linux__
+#if !defined(_LINUX) && !defined(_OSX)
 		void *addr;	} u; 	u.addr = func;
 #else // GCC's member function pointers all contain a this pointer adjustor. You'd probably set it to 0 
 		struct {void *addr; intptr_t adjustor;} s; } u; u.s.addr = func; u.s.adjustor = 0;
@@ -30,7 +30,7 @@ CBaseCombatCharacter *CBaseEntity_MyCombatCharacterPointer(CBaseEntity *pThisPtr
 	void *func = vtable[VFUNCINDEX_CBaseEntity_MyCombatCharacterPointer];
 
 	union { CBaseCombatCharacter *(WSEmptyClass::*mfpnew)();
-#ifndef __linux__
+#if !defined(_LINUX) && !defined(_OSX)
 		void *addr;	} u; 	u.addr = func;
 #else // GCC's member function pointers all contain a this pointer adjustor. You'd probably set it to 0 
 		struct {void *addr; intptr_t adjustor;} s; } u; u.s.addr = func; u.s.adjustor = 0;
