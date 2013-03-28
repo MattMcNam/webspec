@@ -32,7 +32,7 @@ class CBaseCombatCharacter;
 //  -Linux indexes, Windows is _usually_ 1 less
 //=================================================================================
 
-#ifdef _LINUX
+#if defined(_LINUX) || defined(_OSX)
 #define VFUNCINDEX_CBaseCombatCharacter_Weapon_GetSlot 267
 #define VFUNCINDEX_CBaseEntity_MyCombatCharacterPointer 72
 #else
