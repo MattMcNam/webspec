@@ -70,11 +70,13 @@ else() # Windows
 	
 	add_definitions(/D_CRT_SECURE_NO_DEPRECATE /D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_DEPRECATE)
 	set(COMPILER_FLAGS "/EHsc /DR- /W3 /nologo /Zi /TP")
-	set(LINKER_FLAGS "/MACHINE:X86 /SUBSYSTEM:WINDOWS")
+	set(LINKER_FLAGS "/MACHINE:X86 /subsystem:windows /NODEFAULTLIB:libc /NODEFAULTLIB:libcd")
+	set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /NODEFAULTLIB:libcmt")
+	set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /NODEFAULTLIB:libcmtd")
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_FLAGS}")
-set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
 
 # Create the plugin
 add_library(webspec SHARED
@@ -84,16 +86,15 @@ add_library(webspec SHARED
 # Remove 'lib' prefix
 set_target_properties(webspec PROPERTIES PREFIX "")
 
-# Link various libraries
-
-# Various HL2SDK libs, websockets and zlib
+# Link hl2, lws & system libraries
 if(WIN32)
 	target_link_libraries(webspec ${HL2SDK}/lib/public/mathlib.lib)
 	target_link_libraries(webspec ${HL2SDK}/lib/public/tier0.lib)
 	target_link_libraries(webspec ${HL2SDK}/lib/public/tier1.lib)
 	target_link_libraries(webspec ${HL2SDK}/lib/public/vstdlib.lib)
-	target_link_libraries(webspec ${PROJECT_SOURCE_DIR}/lib/websockets.lib)
-	target_link_libraries(webspec ${PROJECT_SOURCE_DIR}/lib/ZLIB.lib)
+	target_link_libraries(webspec ${PROJECT_SOURCE_DIR}/lib/win32/websockets.lib)
+	target_link_libraries(webspec ${PROJECT_SOURCE_DIR}/lib/win32/ZLIB.lib)
+	target_link_libraries(webspec ws2_32.lib)
 else()
 	if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 		target_link_libraries(webspec ${HL2SDK}/lib/mac/mathlib_i486.a)
@@ -101,22 +102,15 @@ else()
 		target_link_libraries(webspec ${HL2SDK}/lib/mac/tier1_i486.a)
 		target_link_libraries(webspec ${HL2SDK}/lib/mac/libvstdlib.dylib)
 		target_link_libraries(webspec ${PROJECT_SOURCE_DIR}/lib/mac/libwebsockets.a)
-		find_package(ZLIB REQUIRED)
-		target_link_libraries(webspec ${ZLIB_LIBRARIES})
 	else()
 		target_link_libraries(webspec ${HL2SDK}/lib/linux/mathlib_i486.a)
 		target_link_libraries(webspec ${HL2SDK}/lib/linux/libtier0_srv.so)
 		target_link_libraries(webspec ${HL2SDK}/lib/linux/tier1_i486.a)
 		target_link_libraries(webspec ${HL2SDK}/lib/linux/libvstdlib_srv.so)
 		target_link_libraries(webspec ${PROJECT_SOURCE_DIR}/lib/linux/libwebsockets.a)
-		find_package(ZLIB REQUIRED)
-		target_link_libraries(webspec ${ZLIB_LIBRARIES})
 	endif()
-endif()
-
-# Platform specifics
-if(WIN32)
-	target_link_libraries(webspec ws2_32.lib)
-else()
+	
+	find_package(ZLIB REQUIRED)
+	target_link_libraries(webspec ${ZLIB_LIBRARIES})
 	target_link_libraries(webspec m)
 endif()
