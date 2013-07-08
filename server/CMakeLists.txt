@@ -48,19 +48,29 @@ source_group("Header Files" FILES ${HDR_PUBLIC})
 source_group("Source FIles" FILES ${SOURCES})
 
 # Setup defines, compiler options and linker options for each platform
-if(UNIX) # Common Unix settings
-	add_definitions(-Dstricmp=strcasecmp -D_stricmp=strcasecmp -D_snprintf=snprintf -D_vsnprintf=vsnprintf -DHAVE_STDINT_H -DGNUC -DNDEBUG)
-	add_definitions(-Usprintf -Ustrncpy -UPROTECTED_THINGS_ENABLE)
-	set(COMPILER_FLAGS "-fno-strict-aliasing -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Werror -Wno-uninitialized -Wno-unused -Wno-switch -msse -m32 -fno-exceptions -fno-threadsafe-statics -Wno-non-virtual-dtor -Wno-overloaded-virtual")
-	set(LINKER_FLAGS "-m32")
-	if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-		add_definitions(-DOSX -D_OSX)
-		set(LINKER_FLAGS "${LINKER_FLAGS} -mmacosx-version-min=10.5 -arch i386 -dynamiclib")
-	else() # Assume Linux
-		add_definitions(-DLINUX -D_LINUX)
-		set(COMPILER_FLAGS "${COMPILER_FLAGS} -mfpmath=sse")
-		set(LINKER_FLAGS "${LINKER_FLAGS} -shared")
-	endif()
+if(UNIX) # Settings copied from sdk 2013 serverplugin sample
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        set(SymbolVisibility "hidden")
+        set(GCC_ExtraCompilerFlags "")
+        set(GCC_ExtraLinkerFlags "")
+        set(WarnFlags "-Wall -Wextra -Wshadow -Wno-invalid-offsetof  -Wno-unknown-pragmas -Wno-unused-parameter -Wno-unused-value -Wno-missing-field-initializers -Wno-sign-compare -Wno-reorder -Wno-invalid-offsetof -Wno-float-equal -Werror=return-type -fdiagnostics-show-option -Wformat -Wformat-security")
+        
+        #Set Optimizer Level
+        if(CMAKE_BUILD_TYPE MATCHES DEBUG)
+            set(OptimizerLevel "-gdwarf-2 -g -O0")
+            add_definitions(-DDEBUG -D_DEBUG -DGNUC -DPOSIX -D_OSX -DOSX -D_DARWIN_UNLIMITED_SELECT -DFD_SETSIZE=10240 -DQUICKTIME_VIDEO -DFORCE_QUICKTIME -DGL_GLEXT_PROTOTYPES -DDX_TO_GL_ABSTRACTION -D_MBCS -D_DLL_EXT=.dylib -D_POSIX=1)
+        else()
+            set(OptimizerLevel "-gdwarf-2 -g -O2 -fno-strict-aliasing -ffast-math -fno-omit-frame-pointer -ftree-vectorize -fpredictive-commoning -funswitch-loops")
+            add_definitions(-DNDEBUG -DGNUC -DPOSIX -D_OSX -DOSX -D_DARWIN_UNLIMITED_SELECT -DFD_SETSIZE=10240 -DQUICKTIME_VIDEO -DFORCE_QUICKTIME -DGL_GLEXT_PROTOTYPES -DDX_TO_GL_ABSTRACTION -D_MBCS -D_DLL_EXT=.dylib -D_POSIX=1)
+        endif()
+        
+        set(CFLAGS "-arch i386 -m32 -march=prescott -momit-leaf-frame-pointer -mtune=core2 ${WarnFlags} -fvisibility=${SymbolVisibility} ${OptimizerLevel} -pipe ${GCC_ExtraCompilerFlags} -Usprintf -Ustrncpy -UPROTECTED_THINGS_ENABLE -mmacosx-version-min=10.5 -fasm-blocks")
+        set(COMPILER_FLAGS ${CFLAGS})
+        add_definitions(-DVPROF_LEVEL=1 -DGNUC -DNO_HOOK_MALLOC -DNO_MALLOC_OVERRIDE)
+        set(LINKER_FLAGS "${CFLAGS} ${GCC_ExtraLinkerFlags} ${OptimizerLevel} -dynamiclib -current_version 1.0 -compatibility_version 1.0 -Wl,-dead_strip -Wl,-no_dead_strip_inits_and_terms")
+    else() # Linux
+        
+    endif()
 else() # Windows
 	# Force use of static libs
 	# Credit SteveL & brofield on StackOverflow
@@ -97,16 +107,16 @@ if(WIN32)
 	target_link_libraries(webspec ws2_32.lib)
 else()
 	if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-		target_link_libraries(webspec ${HL2SDK}/lib/mac/mathlib_i486.a)
-		target_link_libraries(webspec ${HL2SDK}/lib/mac/libtier0.dylib)
-		target_link_libraries(webspec ${HL2SDK}/lib/mac/tier1_i486.a)
-		target_link_libraries(webspec ${HL2SDK}/lib/mac/libvstdlib.dylib)
+		target_link_libraries(webspec ${HL2SDK}/lib/osx32/mathlib.a)
+		target_link_libraries(webspec ${HL2SDK}/lib/osx32/libtier0.dylib)
+		target_link_libraries(webspec ${HL2SDK}/lib/osx32/tier1.a)
+		target_link_libraries(webspec ${HL2SDK}/lib/osx32/libvstdlib.dylib)
 		target_link_libraries(webspec ${PROJECT_SOURCE_DIR}/lib/mac/libwebsockets.a)
 	else()
-		target_link_libraries(webspec ${HL2SDK}/lib/linux/mathlib_i486.a)
-		target_link_libraries(webspec ${HL2SDK}/lib/linux/libtier0_srv.so)
-		target_link_libraries(webspec ${HL2SDK}/lib/linux/tier1_i486.a)
-		target_link_libraries(webspec ${HL2SDK}/lib/linux/libvstdlib_srv.so)
+		target_link_libraries(webspec ${HL2SDK}/lib/public/linux32/mathlib_i486.a)
+		target_link_libraries(webspec ${HL2SDK}/lib/public/linux32/libtier0_srv.so)
+		target_link_libraries(webspec ${HL2SDK}/lib/public/linux32/tier1_i486.a)
+		target_link_libraries(webspec ${HL2SDK}/lib/public/linux32/libvstdlib_srv.so)
 		target_link_libraries(webspec ${PROJECT_SOURCE_DIR}/lib/linux/libwebsockets.a)
 	endif()
 	
