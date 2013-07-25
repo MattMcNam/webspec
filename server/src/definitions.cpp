@@ -9,6 +9,7 @@
  */
 
 #include "definitions.h"
+#include <string.h>
 
 int GetEventIntForName(const char *name) {
 	int i = -1;
