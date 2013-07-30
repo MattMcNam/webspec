@@ -1,14 +1,18 @@
 Building WebSpec server plugin
 ==============================
 
+Notice
+-
+WebSpec will be moving to the new [2013 Source SDK](https://github.com/ValveSoftware/source-sdk-2013). These instructions will be updated once it is compiling and tested on all platforms.
+
 Requirements
 -
 * **[Windows]** Visual Studio or Visual Express C++
-* **[Linux]** gcc 4.6+ or clang
+* **[Linux]** gcc 4.6+ or clang, zlib-dev
 * **[OSX]** Xcode, or a manually install gcc4.6+ / clang
 * cmake 2.6+
 * hl2sdk-ob-valve - http://hg.alliedmods.net/hl2sdks/hl2sdk-ob-valve/
-* libwebsockets-1.22 - http://git.warmcat.com/cgi-bin/cgit/libwebsockets/
+* libwebsockets v1.22 - https://github.com/warmcat/libwebsockets, `checkout v1.22-chrome26-firefox18`
     * only needed for headers, prebuilt library is included
 
 Building
