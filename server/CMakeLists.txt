@@ -65,7 +65,7 @@ else() # Windows
 	# Force use of static libs
 	# Credit SteveL & brofield on StackOverflow
 	foreach(flag_var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINOFO)
-		string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+		string(REGEX REPLACE "/MT" "/MD" ${flag_var} "${${flag_var}}")
 	endforeach()
 	
 	add_definitions(/D_CRT_SECURE_NO_DEPRECATE /D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_DEPRECATE)

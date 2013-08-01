@@ -24,7 +24,7 @@ From your system's Command Prompt or Terminal:
   
 **Windows**  
 `cmake -DHL2SDK=<path-to-hl2sdk...> -DLWS_DIR=<path-to-libwebsockets> -G "Visual Studio 10" ..`  
-Then open in Visual Studio/C++ Express  
+Then open in Visual Studio/C++ Express, choose Debug or Release configuration and build.  
 
 **Linux**  
 `cmake -DHL2SDK=<path-to-hl2sdk...> -DLWS_DIR=<path-to-libwebsockets> -DCMAKE_BUILD_TYPE="Debug" -G "Unix Makefiles" ..`
