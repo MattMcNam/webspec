@@ -9,11 +9,12 @@
  */
 
 #include "definitions.h"
+#include <string.h>
 
 int GetEventIntForName(const char *name) {
 	int i = -1;
 	while (eventInts[++i]) {
-		if (!stricmp(name, eventInts[i])) return i;
+		if (!strcmp(name, eventInts[i])) return i;
 	}
 	return -1;
 }

@@ -328,6 +328,12 @@ PLUGIN_RESULT WebSpecPlugin::NetworkIDValidated( const char *pszUserName, const 
 void WebSpecPlugin::OnQueryCvarValueFinished( QueryCvarCookie_t iCookie, edict_t *pPlayerEntity, EQueryCvarValueStatus eStatus, const char *pCvarName, const char *pCvarValue )
 {
 }
+void WebSpecPlugin::OnEdictAllocated( edict_t *edict )
+{
+}
+void WebSpecPlugin::OnEdictFreed( const edict_t *edict )
+{
+}
 
 //---------------------------------------------------------------------------------
 // Purpose: called when an event is fired
