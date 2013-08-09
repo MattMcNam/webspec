@@ -33,10 +33,10 @@ class CBaseCombatCharacter;
 //=================================================================================
 
 #if defined(_LINUX) || defined(_OSX)
-#define VFUNCINDEX_CBaseCombatCharacter_Weapon_GetSlot 267
+#define VFUNCINDEX_CBaseCombatCharacter_Weapon_GetSlot 268
 #define VFUNCINDEX_CBaseEntity_MyCombatCharacterPointer 72
 #else
-#define VFUNCINDEX_CBaseCombatCharacter_Weapon_GetSlot 266
+#define VFUNCINDEX_CBaseCombatCharacter_Weapon_GetSlot 267
 #define VFUNCINDEX_CBaseEntity_MyCombatCharacterPointer 71
 #endif
 

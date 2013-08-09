@@ -69,8 +69,8 @@ int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocket *wsi,
 					
 					if (playerClass == TFClass_Medic) { 
 						//Way more pointer magic to get ubercharge from medigun
-						CBaseCombatCharacter *playerCombatCharacter = CBaseEntity_MyCombatCharacterPointer(playerEntity);
-						CBaseCombatWeapon *slot1Weapon = CBaseCombatCharacter_Weapon_GetSlot(playerCombatCharacter, 1);
+						CBaseCombatCharacter *playerCombatCharacter = playerEntity->MyCombatCharacterPointer();
+						CBaseCombatWeapon *slot1Weapon = playerCombatCharacter->Weapon_GetSlot(1);
 						
 						uberCharge = *MakePtr(float*, slot1Weapon, WSOffsets::pCWeaponMedigun__m_flChargeLevel);
 					}

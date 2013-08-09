@@ -21,10 +21,13 @@
 #include "offsets.h"
 #include "vfuncs.h"
 
+#define GAME_DLL
+
 #include "convar.h"
 #include "eiface.h"
 #include "engine/iserverplugin.h"
 #include "game/server/iplayerinfo.h"
+#include "cbase.h"
 
 extern IVEngineServer *engine;
 extern IPlayerInfoManager *playerInfoManager;
