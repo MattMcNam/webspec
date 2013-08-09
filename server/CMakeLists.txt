@@ -50,6 +50,8 @@ source_group("Source FIles" FILES ${SOURCES})
 # Setup defines, compiler options and linker options for each platform
 if(UNIX) # Settings copied from sdk 2013 serverplugin sample
     if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        # Malloc fix
+        include_directories(/usr/include/malloc)
         set(SymbolVisibility "hidden")
         set(GCC_ExtraCompilerFlags "")
         set(GCC_ExtraLinkerFlags "")
