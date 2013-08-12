@@ -49,7 +49,7 @@ IServerGameDLL *serverGameDLL = NULL; // Offsets
 
 CGlobalVars *gpGlobals = NULL;
 
-#define WEBSPEC_UPDATE_RATE_IN_SECONDS 0.3
+#define WEBSPEC_UPDATE_RATE_IN_SECONDS 0.0625
 
 CUtlVector<struct libwebsocket *> ws_spectators;
 string_t ws_teamName[2];
