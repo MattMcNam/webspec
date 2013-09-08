@@ -217,10 +217,10 @@ void WebSpecPlugin::GameFrame( bool simulating )
 		for (int i = 1; i < gpGlobals->maxClients; i++) {
 			playerInfo = playerInfoManager->GetPlayerInfo(engine->PEntityOfEntIndex(i));
 			if (playerInfo == NULL || !playerInfo->IsConnected() || playerInfo->IsDead()) continue;
-
-			if (strlen(buffer) > 1)
-				snprintf(buffer, MAX_BUFFER_SIZE, "%s|", buffer);
-
+			
+			if (bufferLength > 1)
+				bufferLength += snprintf(buffer + bufferLength, MAX_BUFFER_SIZE, "|");
+			
 			userid = playerInfo->GetUserID();
 			health = playerInfo->GetHealth();
 			playerOrigin = playerInfo->GetAbsOrigin();
@@ -238,9 +238,10 @@ void WebSpecPlugin::GameFrame( bool simulating )
 				playerUberCharge = 0.0f;
 			}
 
-			bufferLength = snprintf(buffer, MAX_BUFFER_SIZE, "%s%d:%d:%d:%d:%d:%d", buffer, userid, 
+			bufferLength += snprintf(buffer + bufferLength, MAX_BUFFER_SIZE, "%d:%d:%d:%d:%d:%d", userid, 
 				Round(playerOrigin.x), Round(playerOrigin.y), Round(playerAngles.y),
 				health, Round(playerUberCharge*100.0f));
+
 		}
 
 		if (bufferLength == 1) {
