@@ -150,7 +150,7 @@ function init() {
             frame.type = msg.data.charAt(offset);
             offset++;
 			
-			//if (/*frame.type != 'Z'*/ false) 
+			if (/*frame.type != 'Z'*/ false) 
 				debug("Packet: "+ msg.data);
 			
             switch(frame.type)
@@ -239,7 +239,18 @@ function init() {
 						WebSpec.teamPlayersAmount[frame.team-1]++;
 					
                     var idx = WebSpec.players.length;
-                    WebSpec.players[idx] = {'userid': parseInt(frame.userid), 'name': frame.name, 'team': frame.team, 'tfclass': parseInt(frame.tfclass), 'health': parseInt(frame.health), 'maxHealth': parseInt(frame.maxHealth), 'alive': (parseInt(frame.alive) == 1), 'ubered': (parseInt(frame.ubered) == 1), 'charge': parseInt(frame.charge), 'positions': new Array()};
+                    WebSpec.players[idx] = {'userid': parseInt(frame.userid), 
+                                            'name': frame.name, 
+                                            'team': frame.team, 
+                                            'tfclass': parseInt(frame.tfclass), 
+                                            'health': parseInt(frame.health), 
+                                            'maxHealth': parseInt(frame.maxHealth), 
+                                            'alive': (parseInt(frame.alive) == 1), 
+                                            'ubered': (parseInt(frame.ubered) == 1), 
+                                            'charge': parseInt(frame.charge), 
+                                            'positions': new Array(),
+                                            'position': {'x':0, 'y':0, 'ang':0, 't':0},
+                                            'newPosition': {'x':0, 'y':0, 'ang':0, 't':0}};
                     
 					WebSpec.chat.push(frame.name +" has joined");
 					//DEBUG
@@ -392,6 +403,7 @@ function init() {
                         WebSpec.players[idxV].health = 0;
                         //WebSpec.players[idxV].deaths++;
                         //WebSpec.teamPlayersAlive[WebSpec.players[idxV].team-2]--;
+                        WebSpec.newPosition = null;
                         if(WebSpec.players[idxV].positions.length != 0)
                         {
                             WebSpec.players[idxV].positions[WebSpec.players[idxV].positions.length-1].diedhere = true;
@@ -624,8 +636,10 @@ function init() {
                             }
                         }
                         
-                        if(idx != -1)
+                        if(idx != -1 && WebSpec.players[idx].alive)
                         {
+                        	WebSpec.players[idx].position = WebSpec.players[idx].newPosition
+                        	WebSpec.players[idx].newPosition = {'x': frame.positions[i][1], 'y': frame.positions[i][2], 'ang': frame.positions[i][3], 't': time};
                             WebSpec.players[idx].positions[WebSpec.players[idx].positions.length] = {'x': frame.positions[i][1], 'y': frame.positions[i][2], 'angle': frame.positions[i][3], 'time': time, 'diffx': null, 'diffy': null, 'swapx': null, 'swapy': null, 'diedhere': false, 'hurt': false};
 							WebSpec.players[idx].health = parseInt(frame.positions[i][4]);
 							WebSpec.players[idx].charge = parseInt(frame.positions[i][5]);
@@ -832,9 +846,21 @@ function draw() {
 		WebSpec.ctx.font = Math.round(8*scaleDown) +"pt Verdana";
 		for(var i=0;i<WebSpec.players.length;i++)
         {
+        	var pX = WebSpec.players[i].position.x;
+        	var pY = WebSpec.players[i].position.y;
+        	var dX = WebSpec.players[i].newPosition.x;
+        	var dY = WebSpec.players[i].newPosition.y;
+        	
+        	var distance = Math.sqrt( Math.pow(pX - dX, 2) + Math.pow(pY - dY, 2));
+        	var time = WebSpec.players[i].newPosition.t - WebSpec.players[i].position.t;
+        	var speed = distance/time;
+        	
+        	WebSpec.players[i].position.x += speed;
+        	WebSpec.players[i].position.y += speed;
+        	
             // Make sure we're in sync with the other messages..
             // Delete older frames
-            while(WebSpec.players[i].positions.length > 0 && (time - WebSpec.players[i].positions[0].time) > 500) //originally 2000
+            while(WebSpec.players[i].positions.length > 0 && (time - WebSpec.players[i].positions[0].time) > 20) //originally 2000
             {
               WebSpec.players[i].positions.splice(0,1);
             }
@@ -929,11 +955,11 @@ function draw() {
 
             // Draw player itself
             WebSpec.ctx.beginPath();
-            WebSpec.ctx.arc(((WebSpec.players[i].positions[0].x) * cameraZoom) + cameraX, ((WebSpec.players[i].positions[0].y) * cameraZoom)+cameraY, playerRadius*cameraZoom, 0, Math.PI*2, true);
+            WebSpec.ctx.arc(((WebSpec.players[i].position.x) * cameraZoom) + cameraX, ((WebSpec.players[i].position.y) * cameraZoom)+cameraY, playerRadius*cameraZoom, 0, Math.PI*2, true);
             WebSpec.ctx.fill();
 			
 			// Draw name TODO account for rotation
-			WebSpec.ctx.translate(((WebSpec.players[i].positions[0].x) * cameraZoom)+cameraX, ((WebSpec.players[i].positions[0].y) * cameraZoom) + cameraY);
+			WebSpec.ctx.translate(((WebSpec.players[i].position.x) * cameraZoom)+cameraX, ((WebSpec.players[i].position.y) * cameraZoom) + cameraY);
 			WebSpec.ctx.rotate(dtor(WebSpec.mapSettings.rotation));
 			WebSpec.ctx.textAlign = "center";
 			WebSpec.ctx.strokeStyle = WebSpec.ctx.fillStyle;
@@ -942,13 +968,13 @@ function draw() {
 			WebSpec.ctx.strokeText(WebSpec.players[i].name, 0, -5 * cameraZoom);
 			WebSpec.ctx.fillText(WebSpec.players[i].name, 0, -5 * cameraZoom);
 			WebSpec.ctx.rotate(-dtor(WebSpec.mapSettings.rotation));
-			WebSpec.ctx.translate(-(((WebSpec.players[i].positions[0].x) * cameraZoom)+cameraX), -(((WebSpec.players[i].positions[0].y) * cameraZoom) + cameraY));
+			WebSpec.ctx.translate(-(((WebSpec.players[i].position.x) * cameraZoom)+cameraX), -(((WebSpec.players[i].position.y) * cameraZoom) + cameraY));
             
 			
             // Draw view angle as white dot
-            WebSpec.ctx.translate(((WebSpec.players[i].positions[0].x) *cameraZoom) + cameraX, ((WebSpec.players[i].positions[0].y) * cameraZoom) + cameraY);
+            WebSpec.ctx.translate(((WebSpec.players[i].position.x) *cameraZoom) + cameraX, ((WebSpec.players[i].position.y) * cameraZoom) + cameraY);
             WebSpec.ctx.fillStyle = "white";
-            WebSpec.ctx.rotate(WebSpec.players[i].positions[0].angle);
+            WebSpec.ctx.rotate(WebSpec.players[i].position.ang);
             WebSpec.ctx.beginPath();
             WebSpec.ctx.arc(0, Math.round(1.5 * WebSpec.scaling*cameraZoom), Math.round(1 * WebSpec.scaling*cameraZoom), 0, Math.PI*2, true);
             WebSpec.ctx.fill();
