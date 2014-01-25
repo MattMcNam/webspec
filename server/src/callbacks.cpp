@@ -30,6 +30,7 @@ int webspec_callback(struct libwebsocket_context *ctx, struct libwebsocket *wsi,
 	switch (reason) {
 		case LWS_CALLBACK_ESTABLISHED:
 		{
+			Msg("[WS] New connection\n");
 			// New connection
 			ws_spectators.AddToTail(wsi);
 			

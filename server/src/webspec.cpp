@@ -24,7 +24,7 @@ static unsigned WSServerThread(void *params) {
 	WSServerThreadParams_t *vars = (WSServerThreadParams_t *)params;
 	
 	while (ws_shouldListen) {
-		libwebsocket_service(vars->ctx, 50); //check for events every 50ms
+		libwebsocket_service(vars->ctx, 16); //check for events every 16ms
 	}
 
 	delete vars;
@@ -224,10 +224,10 @@ void WebSpecPlugin::GameFrame( bool simulating )
 			userid = playerInfo->GetUserID();
 			health = playerInfo->GetHealth();
 			playerOrigin = playerInfo->GetAbsOrigin();
-			playerAngles = playerInfo->GetAbsAngles();
 
 			playerEntity = serverGameEnts->EdictToBaseEntity(engine->PEntityOfEntIndex(i));
 			playerClass = *MakePtr(int*, playerEntity, WSOffsets::pCTFPlayer__m_iClass);
+			playerAngles = CBaseEntity_EyeAngles(playerEntity);
 
 			if (playerClass == TFClass_Medic) {
 				CBaseCombatCharacter *playerCombatCharacter = CBaseEntity_MyCombatCharacterPointer(playerEntity);
@@ -427,21 +427,16 @@ void WebSpecPlugin::EventHandler_PlayerSpawn(KeyValues *event) {
 }
 
 void SendPacketToAll(char *buffer, int length) {
-	unsigned char *packetBuffer = (unsigned char*)malloc(length + LWS_SEND_BUFFER_PRE_PADDING + LWS_SEND_BUFFER_POST_PADDING);
-
-	//Put sent message into response
-	for (int i=0; i < length; i++) {
-		packetBuffer[LWS_SEND_BUFFER_PRE_PADDING + i] = buffer[i];
-	}
-	
 	//Send to all clients
 	for (int i = 0; i < ws_spectators.Count(); i++) {
-		libwebsocket_write(ws_spectators[i], &packetBuffer[LWS_SEND_BUFFER_PRE_PADDING], length, LWS_WRITE_TEXT);
+		SendPacketToOne(buffer, length, ws_spectators[i]);
 	}
-	free(packetBuffer);
 }
 
 void SendPacketToOne(char *buffer, int length, struct libwebsocket *wsi) {
+	if (wsi == nullptr)
+		return;
+
 	unsigned char *packetBuffer = (unsigned char *)malloc(length + LWS_SEND_BUFFER_PRE_PADDING + LWS_SEND_BUFFER_POST_PADDING);
 
 	//Put sent message into response

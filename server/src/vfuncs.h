@@ -12,6 +12,7 @@
 #define VFUNCS_H
 
 #include <stdint.h>
+#include "mathlib/vector.h"
 
 class WSEmptyClass {};
 
@@ -33,15 +34,19 @@ class CBaseCombatCharacter;
 //=================================================================================
 
 #if defined(_LINUX) || defined(_OSX)
-#define VFUNCINDEX_CBaseCombatCharacter_Weapon_GetSlot 267
+#define VFUNCINDEX_CBaseCombatCharacter_Weapon_GetSlot 268
 #define VFUNCINDEX_CBaseEntity_MyCombatCharacterPointer 72
+#define VFUNCINDEX_CBaseEntity_EyeAngles 132
 #else
-#define VFUNCINDEX_CBaseCombatCharacter_Weapon_GetSlot 266
+#define VFUNCINDEX_CBaseCombatCharacter_Weapon_GetSlot 267
 #define VFUNCINDEX_CBaseEntity_MyCombatCharacterPointer 71
+#define VFUNCINDEX_CBaseEntity_EyeAngles 131
 #endif
 
 extern CBaseCombatWeapon *CBaseCombatCharacter_Weapon_GetSlot(CBaseCombatCharacter *pThisPtr, int slot);
 
 extern CBaseCombatCharacter *CBaseEntity_MyCombatCharacterPointer(CBaseEntity *pThisPtr);
+
+extern  QAngle& CBaseEntity_EyeAngles(CBaseEntity *pThisPtr);
 
 #endif
