@@ -250,7 +250,8 @@ function init() {
                                             'charge': parseInt(frame.charge), 
                                             'positions': new Array(),
                                             'position': {'x':0, 'y':0, 'ang':0, 't':0},
-                                            'newPosition': {'x':0, 'y':0, 'ang':0, 't':0}};
+                                            'newPosition': {'x':0, 'y':0, 'ang':0, 't':0},
+                                            'spawned': false};
                     
 					WebSpec.chat.push(frame.name +" has joined");
 					//DEBUG
@@ -506,7 +507,8 @@ function init() {
                     {
                         //if(!WebSpec.players[idx].alive)
                             //WebSpec.teamPlayersAlive[WebSpec.players[idx].team-2]++;
-                        WebSpec.players[idx].alive = true;
+                        //WebSpec.players[idx].alive = true;
+                        WebSpec.players[idx].spawned = true;
 						if (frame.tfclass > 0)
 							WebSpec.players[idx].tfclass = parseInt(frame.tfclass);
                         WebSpec.players[idx].health = parseInt(frame.health);
@@ -636,11 +638,16 @@ function init() {
                             }
                         }
                         
-                        if(idx != -1 && WebSpec.players[idx].alive)
+                        if (idx != -1 && (WebSpec.players[idx].alive || WebSpec.players[idx].spawned))
                         {
                         	WebSpec.players[idx].position = WebSpec.players[idx].newPosition
                         	WebSpec.players[idx].newPosition = {'x': frame.positions[i][1], 'y': frame.positions[i][2], 'ang': frame.positions[i][3], 't': time};
-                            WebSpec.players[idx].positions[WebSpec.players[idx].positions.length] = {'x': frame.positions[i][1], 'y': frame.positions[i][2], 'angle': frame.positions[i][3], 'time': time, 'diffx': null, 'diffy': null, 'swapx': null, 'swapy': null, 'diedhere': false, 'hurt': false};
+                        	if (WebSpec.players[idx].spawned) {
+                        		WebSpec.players[idx].position = WebSpec.players[idx].newPosition;
+                        		WebSpec.players[idx].spawned = false;
+                        		WebSpec.players[idx].alive = true;
+                        	}
+                        	
 							WebSpec.players[idx].health = parseInt(frame.positions[i][4]);
 							WebSpec.players[idx].charge = parseInt(frame.positions[i][5]);
                         }
@@ -846,98 +853,37 @@ function draw() {
 		WebSpec.ctx.font = Math.round(8*scaleDown) +"pt Verdana";
 		for(var i=0;i<WebSpec.players.length;i++)
         {
-        	var pX = WebSpec.players[i].position.x;
-        	var pY = WebSpec.players[i].position.y;
-        	var dX = WebSpec.players[i].newPosition.x;
-        	var dY = WebSpec.players[i].newPosition.y;
+        	if (WebSpec.players[i].alive) {
+        		var pX = WebSpec.players[i].position.x;
+        		var pY = WebSpec.players[i].position.y;
+        		var dX = WebSpec.players[i].newPosition.x;
+        		var dY = WebSpec.players[i].newPosition.y;
+        		
+        		var distance = Math.sqrt( Math.pow(pX - dX, 2) + Math.pow(pY - dY, 2));
+        		var time = WebSpec.players[i].newPosition.t - WebSpec.players[i].position.t;
+        		var speed = distance/time;
+        		
+        		WebSpec.players[i].position.x += speed;
+        		WebSpec.players[i].position.y += speed;
+        	}
         	
-        	var distance = Math.sqrt( Math.pow(pX - dX, 2) + Math.pow(pY - dY, 2));
-        	var time = WebSpec.players[i].newPosition.t - WebSpec.players[i].position.t;
-        	var speed = distance/time;
-        	
-        	WebSpec.players[i].position.x += speed;
-        	WebSpec.players[i].position.y += speed;
-        	
-            // Make sure we're in sync with the other messages..
-            // Delete older frames
-            while(WebSpec.players[i].positions.length > 0 && (time - WebSpec.players[i].positions[0].time) > 20) //originally 2000
-            {
-              WebSpec.players[i].positions.splice(0,1);
-            }
-			
-            // There is no coordinate for this player yet
-            if(WebSpec.players[i].positions.length == 0)
-                continue;
-            
             WebSpec.ctx.save();
 			
             if(WebSpec.players[i].team < 2)
                 WebSpec.ctx.fillStyle = "black";
             else if(WebSpec.players[i].team == 2)
             {
-                if(WebSpec.players[i].positions[0].diedhere == false)
+                if (WebSpec.players[i].alive)
                     WebSpec.ctx.fillStyle = "red";
                 else
                     WebSpec.ctx.fillStyle = "rgba(255,0,0,0.3)";
             }
             else if(WebSpec.players[i].team == 3)
             {
-                if(WebSpec.players[i].positions[0].diedhere == false)
+                if (WebSpec.players[i].alive)
                     WebSpec.ctx.fillStyle = "blue";
                 else
                     WebSpec.ctx.fillStyle = "rgba(0,0,255,0.3)";
-            }
-            
-            // Teleport directly to new spawn, if he died at this position
-            if(WebSpec.players[i].positions[0].diedhere)
-            {
-                if(WebSpec.players[i].positions[1])
-                {
-                    //if(time >= WebSpec.players[i].positions[1].time)
-                        WebSpec.players[i].positions.splice(0,1);
-                }
-            }
-            // Move the player smoothly towards the new position
-            else if(WebSpec.players[i].positions.length > 1)
-            {
-                if(WebSpec.players[i].positions[0].x == WebSpec.players[i].positions[1].x
-                && WebSpec.players[i].positions[0].y == WebSpec.players[i].positions[1].y)
-                {
-                    //if(time >= WebSpec.players[i].positions[1].time)
-                        WebSpec.players[i].positions.splice(0,1);
-                }
-                else
-                {
-                    // This function is called 20x a second
-                    if(WebSpec.players[i].positions[0].swapx == null)
-                    {
-                        WebSpec.players[i].positions[0].swapx = WebSpec.players[i].positions[0].x > WebSpec.players[i].positions[1].x?-1:1;
-                        WebSpec.players[i].positions[0].swapy = WebSpec.players[i].positions[0].y > WebSpec.players[i].positions[1].y?-1:1;
-                    }
-                    if(WebSpec.players[i].positions[0].diffx == null)
-                    {
-                        var timediff = WebSpec.players[i].positions[1].time - WebSpec.players[i].positions[0].time;
-                        WebSpec.players[i].positions[0].diffx = Math.abs(WebSpec.players[i].positions[1].x - WebSpec.players[i].positions[0].x)/(timediff/50);
-                        WebSpec.players[i].positions[0].diffy = Math.abs(WebSpec.players[i].positions[1].y - WebSpec.players[i].positions[0].y)/(timediff/50);
-                    }
-                    
-                    var x = WebSpec.players[i].positions[0].x + WebSpec.players[i].positions[0].swapx*WebSpec.players[i].positions[0].diffx;
-                    var y = WebSpec.players[i].positions[0].y + WebSpec.players[i].positions[0].swapy*WebSpec.players[i].positions[0].diffy;
-                    
-                    // We're moving too far...
-                    if((WebSpec.players[i].positions[0].swapx==-1 && x <= WebSpec.players[i].positions[1].x)
-                    || (WebSpec.players[i].positions[0].swapx==1 && x >= WebSpec.players[i].positions[1].x)
-                    || (WebSpec.players[i].positions[0].swapy==-1 && y <= WebSpec.players[i].positions[1].y)
-                    || (WebSpec.players[i].positions[0].swapy==1 && y >= WebSpec.players[i].positions[1].y))
-                    {
-                        WebSpec.players[i].positions.splice(0,1);
-                    }
-                    else
-                    {
-                        WebSpec.players[i].positions[0].x = x;
-                        WebSpec.players[i].positions[0].y = y;
-                    }
-                }
             }
             
             var playerRadius = WebSpec.playerRadius;
